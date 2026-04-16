@@ -530,8 +530,19 @@ def generate_pdf_preview(current_user, report_id):
         layout_settings=layout_settings,
         sections=sections,
     )
+    
+    base_url = str(request.host_url).rstrip('/')
+    html_string = html_string.replace(
+        '<head>',
+        f'<head><base href="{base_url}/">',
+        1,
+    )
 
-    pdf_bytes = generate_pdf_from_html(html_string)
+    pdf_bytes = generate_pdf_from_html(
+        html_string,
+        base_url=base_url,
+        student_name=r.user.name if r.user else 'Student',
+    )
 
     return send_file(
         io.BytesIO(pdf_bytes),
