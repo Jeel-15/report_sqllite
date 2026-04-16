@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ report.projectTitle }}</title>
+    <style>
+        * { box-sizing: border-box; }
+        @page { size: A4 portrait; }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 12pt;
+            color: #1a1a1a;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+            /* NO width property — body fills the printable area defined by Playwright margins */
+        }
+        .doc-wrap { padding: 0; width: 100%; margin: 0; }
+        .report-page {
+            display: block;
+        }
+        .section-page {
+            page-break-before: always;
+            page-break-after: auto;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9pt;
+            color: #555;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 3pt;
+            margin-bottom: 8pt;
+            page-break-after: avoid;
+            page-break-inside: avoid;
+        }
+        .page-footer {
+            font-size: 8pt;
+            color: #555;
+            border-top: 1px solid #999;
+            padding-top: 2pt;
+            margin-top: 12pt;
+            page-break-inside: avoid;
+            page-break-before: avoid;
+        }
+        .page-footer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .page-footer-plagiarism {
+            text-align: center;
+            font-size: 7pt;
+            color: #888;
+            margin-top: 1pt;
+        }
+
+        /* Native Playwright header/footer is used during PDF generation. */
+        .page-header,
+        .page-footer {
+            display: none;
+        }
+
+        .cover-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 10mm 10mm 10mm 10mm;
+            min-height: calc(297mm - 55.4mm);
+            page-break-after: always;
+            overflow: visible;
+            border: 2px solid #000;
+            margin: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .cover-title {
+            font-size: 22pt;
+            font-weight: bold;
+            font-family: 'Times New Roman', Times, serif;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0 0 5mm 0;
+            color: #000;
+            width: 100%;
+        }
+        .cover-project-title {
+            font-size: 15pt;
+            font-style: italic;
+            text-align: center;
+            margin: 0 0 8mm 0;
+            color: #222;
+        }
+        .logo-row {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 0 0 8mm 0;
+        }
+        .cover-spacer {
+            height: 10mm;
+            width: 100%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+        }
+        .logo {
+            width: 110px;
+            height: 110px;
+            object-fit: contain;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 6px;
+            background: #fff;
+        }
+        .cover-info-box {
+            border: 1.5px solid #333;
+            padding: 6mm 8mm;
+            width: 100%;
+            margin-top: 4mm;
+            align-self: stretch;
+            box-sizing: border-box;
+        }
+        .cover-info-row {
+            display: flex;
+            margin-bottom: 5pt;
+            font-size: 11pt;
+            align-items: flex-start;
+        }
+        .cover-info-label {
+            font-weight: bold;
+            min-width: 42mm;
+            max-width: 42mm;
+            color: #000;
+            padding-right: 3mm;
+            flex-shrink: 0;
+        }
+        .cover-info-value {
+            color: #222;
+            flex: 1;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            min-width: 0;
+        }
+        .section-title {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 16pt;
+            font-weight: bold;
+            color: #000000;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 4pt;
+            margin-bottom: 10pt;
+            margin-top: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            page-break-after: avoid;
+        }
+        .section-content {
+            font-size: 12pt;
+            line-height: 1.5;
+            color: #1a1a1a;
+            page-break-inside: auto;
+            orphans: 2;
+            widows: 2;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            overflow: visible;
+            width: 100%;
+        }
+        .section-content.rtl-content {
+            direction: rtl;
+            text-align: right;
+            unicode-bidi: bidi-override;
+        }
+        .section-content.ltr-content {
+            direction: ltr;
+            text-align: justify;
+        }
+        .section-content p {
+            margin: 0 0 8pt 0;
+            line-height: 1.5;
+            text-indent: 0;
+        }
+        .section-title + .section-content p:first-child,
+        .section-content p:first-child {
+            text-indent: 0;
+            margin-top: 0;
+        }
+        .section-content p + p {
+            margin-top: 6pt;
+            text-indent: 8mm;
+        }
+        /* No indent inside lists — looks wrong if indented */
+        .section-content li p,
+        .section-content li > p:first-child {
+            text-indent: 0;
+            margin: 0;
+        }
+        .section-content.rtl-content p {
+            text-align: right;
+            text-indent: 0;
+        }
+        /* Nested list indent */
+        .section-content ul ul,
+        .section-content ol ol,
+        .section-content ol ul,
+        .section-content ul ol {
+            padding-left: 18pt;
+            margin-top: 2pt;
+            margin-bottom: 2pt;
+        }
+
+        /* Lists */
+        .section-content ul {
+            margin: 8pt 0 10pt 0;
+            padding-left: 22pt;
+            list-style-type: disc;
+        }
+        .section-content ol {
+            margin: 8pt 0 10pt 0;
+            padding-left: 22pt;
+            list-style-type: decimal;
+        }
+        .section-content li {
+            margin-bottom: 3pt;
+            line-height: 1.5;
+        }
+        .section-content ul ul,
+        .section-content ol ul {
+            list-style-type: circle;
+            margin-top: 3pt;
+        }
+
+        /* Bold inline text inside paragraphs — do NOT override size here */
+        .section-content strong,
+        .section-content b {
+            font-weight: bold;
+            color: #000;
+        }
+
+        /* Standalone bold subtitle lines (only child of their paragraph) */
+        .section-content p > strong:only-child,
+        .section-content p > b:only-child,
+        .section-content p > strong:first-child:last-child,
+        .section-content p > b:first-child:last-child {
+            font-size: 14pt;
+            display: block;
+            margin-top: 10pt;
+            margin-bottom: 4pt;
+            font-weight: bold;
+        }
+
+        /* Parent paragraph of a subtitle strong should not double-indent */
+        .section-content p:has(> strong:only-child),
+        .section-content p:has(> b:only-child) {
+            text-indent: 0;
+            margin-top: 10pt;
+            margin-bottom: 4pt;
+        }
+
+        /* Guard against clipped lines if markdown ever emits code/pre blocks */
+        .section-content pre,
+        .section-content code {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            max-width: 100%;
+        }
+
+        /* Tables */
+        .section-content table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            margin: 10pt 0;
+            font-size: 11pt;
+            word-break: normal;
+            overflow-wrap: normal;
+        }
+        .section-content .table-word-safe,
+        .section-content .table-word-safe * {
+            overflow-wrap: normal;
+            word-break: normal;
+            hyphens: none;
+        }
+        .section-content table * {
+            overflow-wrap: normal;
+            word-break: normal;
+            hyphens: none;
+        }
+        .section-content th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            border: 1px solid #333;
+            padding: 5pt 7pt;
+            text-align: left;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            hyphens: none;
+            vertical-align: top;
+            font-size: 11pt;
+            line-height: 1.4;
+        }
+        .section-content td {
+            border: 1px solid #555;
+            padding: 5pt 7pt;
+            vertical-align: top;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            hyphens: none;
+            font-size: 11pt;
+            line-height: 1.4;
+        }
+        .section-content th:first-child,
+        .section-content td:first-child {
+            width: 22%;
+        }
+        .section-content th:nth-child(2),
+        .section-content td:nth-child(2) {
+            width: auto;
+        }
+        .section-content th:last-child,
+        .section-content td:last-child {
+            width: 35%;
+        }
+        .section-content tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .section-content thead {
+            display: table-header-group;
+        }
+        .section-content tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        .toc { padding-top: 0; }
+        .toc-title {
+            font-size: 16pt;
+            font-weight: bold;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid #000;
+            padding-bottom: 4pt;
+            margin-bottom: 14pt;
+        }
+        .toc-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-size: 12pt;
+            margin-bottom: 14px;
+            border-bottom: 1px dotted #999;
+            padding-bottom: 4pt;
+        }
+        .toc-item-title { font-weight: normal; color: #111; }
+        .toc-item-page {
+            font-weight: bold;
+            color: #111;
+            white-space: nowrap;
+            margin-left: 5mm;
+        }
+    </style>
+</head>
+<body>
+    <div class="doc-wrap">
+
+        <!-- COVER PAGE -->
+        <div class="cover-page">
+            <div class="cover-title">Internship Report</div>
+            <div class="cover-project-title">{{ report.projectTitle }}</div>
+
+            {% if cover_logos and cover_logos|length > 0 %}
+            <div class="logo-row">
+                {% for logo in cover_logos %}
+                <img class="logo" src="{{ logo }}" alt="logo">
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="cover-spacer">
+                <div style="width:60%;margin:0 auto;border-bottom:1px solid #ccc;"></div>
+            </div>
+
+            <div class="cover-info-box">
+                <div class="cover-info-row">
+                    <span class="cover-info-label">Student Name:</span>
+                    <span class="cover-info-value">{{ report.user.name }}</span>
+                </div>
+                <div class="cover-info-row">
+                    <span class="cover-info-label">Roll No:</span>
+                    <span class="cover-info-value">{{ report.rollNumber or '-' }}</span>
+                </div>
+                <div class="cover-info-row">
+                    <span class="cover-info-label">Enrollment No:</span>
+                    <span class="cover-info-value">{{ report.user.enrollmentNumber if report.user else '-' }}</span>
+                </div>
+                <div class="cover-info-row">
+                    <span class="cover-info-label">Degree / Major:</span>
+                    <span class="cover-info-value">{{ report.degree.name if report.degree else '-' }} / {{ report.major.name if report.major else '-' }}</span>
+                </div>
+                <div class="cover-info-row">
+                    <span class="cover-info-label">Academic Year:</span>
+                    <span class="cover-info-value">{{ report.academicYear or '-' }}</span>
+                </div>
+                <div class="cover-info-row">
+                    <span class="cover-info-label">Internship Title:</span>
+                    <span class="cover-info-value">{{ report.internshipTitle or '-' }}</span>
+                </div>
+                {% if college %}
+                <div class="cover-info-row">
+                    <span class="cover-info-label">College:</span>
+                    <span class="cover-info-value">{{ college.name }}</span>
+                </div>
+                {% endif %}
+                {% if university %}
+                <div class="cover-info-row">
+                    <span class="cover-info-label">University:</span>
+                    <span class="cover-info-value">{{ university.name }}</span>
+                </div>
+                {% endif %}
+                {% if industry %}
+                <div class="cover-info-row">
+                    <span class="cover-info-label">Industry:</span>
+                    <span class="cover-info-value">{{ industry.name }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- TABLE OF CONTENTS -->
+        <div class="report-page toc" style="page-break-after: always;">
+            {% if layout_settings and layout_settings.showHeader %}
+            <div class="page-header">
+                <span>{{ layout_settings.headerLeft }}</span>
+                <span>{{ layout_settings.headerRight }}</span>
+            </div>
+            {% endif %}
+
+            <div class="toc-title">Table Of Contents</div>
+            <div>
+                {% for section in sections %}
+                <div class="toc-item">
+                    <span class="toc-item-title">{{ section.title }}</span>
+                    <span class="toc-item-page" id="toc-page-{{ loop.index0 }}">{{ loop.index + 2 }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            <div style="margin-top:auto; padding-top:20mm; border-top:1px solid #ccc; font-size:9pt; color:#888; text-align:center;">
+                - End of Contents -
+            </div>
+
+            {% if layout_settings and layout_settings.showFooter %}
+            <div class="page-footer">
+                <div class="page-footer-row">
+                    <span>{{ report.user.name if report.user else 'Student' }}</span>
+                    <span>Page</span>
+                </div>
+                <div class="page-footer-plagiarism">Plagiarism check below 15%</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- SECTIONS -->
+        {% for section in sections %}
+        <div class="report-page section-page" data-section-index="{{ loop.index0 }}">
+
+            {% if layout_settings and layout_settings.showHeader %}
+            <div class="page-header">
+                <span>{{ layout_settings.headerLeft }}</span>
+                <span>{{ layout_settings.headerRight }}</span>
+            </div>
+            {% endif %}
+
+            {# Section title — direction from Python detection #}
+            <div class="section-title" style="direction: {{ section.direction | default('ltr') }}; text-align: {{ 'right' if section.is_rtl else 'left' }};">
+                {{ section.title }}
+            </div>
+
+            {# TOP images #}
+            {% if section.images_top is defined and section.images_top %}
+                {% for img in section.images_top %}
+                <div style="text-align:center; margin-bottom:10pt; page-break-inside:avoid;">
+                    <img src="{{ img.url }}"
+                         style="width:{{ img.widthPercent|default(100) }}%; max-width:100%; height:auto;"
+                         alt="{{ img.caption|default('') }}">
+                    {% if img.caption %}
+                    <p style="font-size:9pt;color:#555;margin-top:3pt;text-align:center;">{{ img.caption }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            {# Section content — RTL/LTR auto-detected #}
+            <div class="section-content {{ 'rtl-content' if section.is_rtl else 'ltr-content' }}" style="direction: {{ section.direction | default('ltr') }}; text-align: {{ 'right' if section.is_rtl else 'justify' }};">
+                {{ (section.content_before if section.content_before is defined else section.content) | safe }}
+            </div>
+
+            {# MIDDLE images #}
+            {% if section.images_middle is defined and section.images_middle %}
+                {% for img in section.images_middle %}
+                <div style="text-align:center;margin:10pt 0;page-break-inside:avoid;">
+                    <img src="{{ img.url }}"
+                         style="width:{{ img.widthPercent|default(100) }}%;max-width:100%;height:auto;"
+                         alt="{{ img.caption|default('') }}">
+                    {% if img.caption %}
+                    <p style="font-size:9pt;color:#555;margin-top:3pt;text-align:center;">{{ img.caption }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            {# Content after middle images #}
+            {% if section.content_after is defined and section.content_after %}
+            <div class="section-content {{ 'rtl-content' if section.is_rtl else 'ltr-content' }}" style="direction: {{ section.direction | default('ltr') }}; text-align: {{ 'right' if section.is_rtl else 'justify' }};">
+                {{ section.content_after | safe }}
+            </div>
+            {% endif %}
+
+            {# BOTTOM images #}
+            {% if section.images_bottom is defined and section.images_bottom %}
+                {% for img in section.images_bottom %}
+                <div style="text-align:center;margin-top:10pt;page-break-inside:avoid;">
+                    <img src="{{ img.url }}"
+                         style="width:{{ img.widthPercent|default(100) }}%;max-width:100%;height:auto;"
+                         alt="{{ img.caption|default('') }}">
+                    {% if img.caption %}
+                    <p style="font-size:9pt;color:#555;margin-top:3pt;text-align:center;">{{ img.caption }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if layout_settings and layout_settings.showFooter %}
+            <div class="page-footer">
+                <div class="page-footer-row">
+                    <span>{{ report.user.name if report.user else 'Student' }}</span>
+                    <span>Page</span>
+                </div>
+                <div class="page-footer-plagiarism">Plagiarism check below 15%</div>
+            </div>
+            {% endif %}
+
+        </div>
+        {% endfor %}
+
+    </div>
+    <script>
+        (function () {
+            const mmToPx = 96 / 25.4;
+            const printablePageHeightPx = (297 - 55.4) * mmToPx;
+            const tocBasePage = 3; // cover (1) + TOC (2)
+
+            const sections = Array.from(document.querySelectorAll('.section-page[data-section-index]'));
+            let nextPage = tocBasePage;
+
+            sections.forEach((sectionEl) => {
+                const idx = Number(sectionEl.getAttribute('data-section-index') || '0');
+                const tocTarget = document.getElementById(`toc-page-${idx}`);
+                if (tocTarget) {
+                    tocTarget.textContent = String(nextPage);
+                }
+
+                const sectionHeight = sectionEl.scrollHeight || sectionEl.getBoundingClientRect().height || 0;
+                const pagesUsed = Math.max(1, Math.ceil(sectionHeight / printablePageHeightPx));
+                nextPage += pagesUsed;
+            });
+
+            window.__tocReady = true;
+        })();
+    </script>
+</body>
+</html>

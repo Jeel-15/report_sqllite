@@ -1,0 +1,132 @@
+{% extends "admin/layout.html" %}
+{% set active_page = 'settings' %}
+
+{% block title %}Settings - ReportGen Admin{% endblock %}
+
+{% block admin_content %}
+<section class="dashboard-grid">
+    <div>
+        <h1 class="page-title">Settings</h1>
+        <p class="page-subtitle">Configure platform preferences, account security, and integration settings.</p>
+    </div>
+
+    <div class="settings-layout">
+        <aside class="settings-nav" id="settingsTabs">
+            <button type="button" class="active" data-pane="generalPane">General</button>
+            <button type="button" data-pane="profilePane">Profile</button>
+            <button type="button" data-pane="securityPane">Security</button>
+            <button type="button" data-pane="billingPane">Billing</button>
+            <button type="button" data-pane="notificationsPane">Notifications</button>
+            <button type="button" data-pane="apiPane">API</button>
+        </aside>
+
+        <div class="dashboard-grid">
+            <article class="panel-card panel-body settings-pane active" id="generalPane">
+                <h3 class="panel-title">General Settings</h3>
+                <p class="page-subtitle" style="margin:6px 0 16px;">Set core platform options for ReportGen.</p>
+                <div class="form-grid">
+                    <div class="field">
+                        <label>Platform Name</label>
+                        <input type="text" value="ReportGen">
+                        <small>Visible in browser title and outgoing emails.</small>
+                    </div>
+                    <div class="field">
+                        <label>Logo Upload</label>
+                        <input type="file">
+                        <small>Recommended size: 256x256 PNG.</small>
+                    </div>
+                    <div class="field">
+                        <label>Default Language</label>
+                        <select><option>English</option><option>Hindi</option><option>Gujarati</option></select>
+                        <small>Used for default AI report output.</small>
+                    </div>
+                    <div class="field">
+                        <label>Timezone</label>
+                        <select><option>Asia/Kolkata</option><option>UTC</option></select>
+                        <small>Applies to report timestamps and notifications.</small>
+                    </div>
+                </div>
+                <div class="action-row"><button class="btn-primary" type="button">Save Changes</button></div>
+            </article>
+
+            <article class="panel-card panel-body settings-pane" id="profilePane">
+                <h3 class="panel-title">Admin Profile</h3>
+                <p class="page-subtitle" style="margin:6px 0 16px;">Manage your account details and contact preferences.</p>
+                <div class="form-grid">
+                    <div class="field"><label>Admin Name</label><input type="text" value="Admin"></div>
+                    <div class="field"><label>Email</label><input type="email" value="admin@reportgen.ai"></div>
+                    <div class="field"><label>Phone</label><input type="text" value="+91 98765 43210"></div>
+                    <div class="field"><label>Designation</label><input type="text" value="Platform Administrator"></div>
+                </div>
+                <div class="action-row"><button class="btn-primary" type="button">Update Profile</button></div>
+            </article>
+
+            <article class="panel-card panel-body settings-pane" id="securityPane">
+                <h3 class="panel-title">Security</h3>
+                <p class="page-subtitle" style="margin:6px 0 16px;">Keep your admin access secure.</p>
+                <div class="form-grid">
+                    <div class="field"><label>Current Password</label><input type="password" value=""></div>
+                    <div class="field"><label>New Password</label><input type="password" value=""></div>
+                    <div class="field"><label>Confirm New Password</label><input type="password" value=""></div>
+                    <div class="field"><label>Two-Factor Authentication</label><select><option>Enabled</option><option>Disabled</option></select></div>
+                </div>
+                <div class="action-row"><button class="btn-primary" type="button">Save Security Settings</button></div>
+            </article>
+
+            <article class="panel-card panel-body settings-pane" id="billingPane">
+                <h3 class="panel-title">Billing</h3>
+                <p class="page-subtitle" style="margin:6px 0 16px;">Manage plan and billing details.</p>
+                <div class="form-grid">
+                    <div class="field"><label>Current Plan</label><select><option>Pro Annual</option><option>Starter</option><option>Enterprise</option></select></div>
+                    <div class="field"><label>Billing Email</label><input type="email" value="billing@reportgen.ai"></div>
+                    <div class="field"><label>GST Number</label><input type="text" value="24ABCDE1234F1Z5"></div>
+                    <div class="field"><label>Auto Renewal</label><select><option>Enabled</option><option>Disabled</option></select></div>
+                </div>
+                <div class="action-row"><button class="btn-primary" type="button">Update Billing</button></div>
+            </article>
+
+            <article class="panel-card panel-body settings-pane" id="notificationsPane">
+                <h3 class="panel-title">Notifications</h3>
+                <p class="page-subtitle" style="margin:6px 0 16px;">Control when and how notifications are sent.</p>
+                <div class="form-grid">
+                    <div class="field"><label>System Alerts</label><select><option>Enabled</option><option>Disabled</option></select></div>
+                    <div class="field"><label>Report Failures</label><select><option>Immediate</option><option>Hourly Digest</option></select></div>
+                    <div class="field"><label>Student Activity Summary</label><select><option>Daily</option><option>Weekly</option></select></div>
+                    <div class="field"><label>New Registration Alert</label><select><option>Enabled</option><option>Disabled</option></select></div>
+                </div>
+                <div class="action-row"><button class="btn-primary" type="button">Save Notification Preferences</button></div>
+            </article>
+
+            <article class="panel-card panel-body settings-pane" id="apiPane">
+                <h3 class="panel-title">API & Integrations</h3>
+                <p class="page-subtitle" style="margin:6px 0 16px;">Configure API keys and webhook endpoints.</p>
+                <div class="form-grid">
+                    <div class="field"><label>Public API Key</label><input type="text" value="rg_live_8f62d1d9a8cf"></div>
+                    <div class="field"><label>Webhook URL</label><input type="url" value="https://api.reportgen.ai/webhooks/events"></div>
+                    <div class="field"><label>Allowed Origins</label><textarea>https://reportgen.ai
+https://admin.reportgen.ai</textarea></div>
+                    <div class="field"><label>Rate Limit (per minute)</label><input type="number" value="120"></div>
+                </div>
+                <div class="action-row"><button class="btn-primary" type="button">Save API Settings</button></div>
+            </article>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block page_js %}
+<script>
+    const settingsTabs = document.getElementById('settingsTabs');
+    if (settingsTabs) {
+        settingsTabs.querySelectorAll('button').forEach((tab) => {
+            tab.addEventListener('click', () => {
+                const target = tab.dataset.pane;
+                settingsTabs.querySelectorAll('button').forEach((btn) => btn.classList.remove('active'));
+                document.querySelectorAll('.settings-pane').forEach((pane) => pane.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(target)?.classList.add('active');
+            });
+        });
+    }
+</script>
+{% endblock %}

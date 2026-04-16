@@ -1,0 +1,762 @@
+{% extends "admin/layout.html" %}
+{% set active_page = 'dashboard' %}
+
+{% block title %}Admin Dashboard - ReportGen{% endblock %}
+
+{% block admin_content %}
+<section class="dashboard-grid">
+    <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Overview of your platform's performance</p>
+    </div>
+
+    <div class="stats-grid">
+        <article class="panel-card stat-card">
+            <div class="stat-head">
+                <span class="stat-icon ic-blue"><i data-lucide="users" style="width:18px;height:18px;"></i></span>
+                <span class="trend up" id="trendStudents">▲ 0%</span>
+            </div>
+            <div class="stat-value" id="metricStudents" data-countup data-target="0">0</div>
+            <div class="stat-label">Total Students</div>
+            <div class="stat-note" id="noteStudents">vs. 0 last period</div>
+        </article>
+
+        <article class="panel-card stat-card">
+            <div class="stat-head">
+                <span class="stat-icon ic-purple"><i data-lucide="file-text" style="width:18px;height:18px;"></i></span>
+                <span class="trend up" id="trendReports">▲ 0%</span>
+            </div>
+            <div class="stat-value" id="metricReports" data-countup data-target="0">0</div>
+            <div class="stat-label">Reports Generated</div>
+            <div class="stat-note" id="noteReports">vs. 0 last period</div>
+        </article>
+
+        <article class="panel-card stat-card">
+            <div class="stat-head">
+                <span class="stat-icon ic-amber"><i data-lucide="graduation-cap" style="width:18px;height:18px;"></i></span>
+                <span class="trend up" id="trendUniversities">▲ 0%</span>
+            </div>
+            <div class="stat-value" id="metricUniversities" data-countup data-target="0">0</div>
+            <div class="stat-label">Active Universities</div>
+            <div class="stat-note" id="noteUniversities">Live active count</div>
+        </article>
+
+        <article class="panel-card stat-card">
+            <div class="stat-head">
+                <span class="stat-icon ic-green"><i data-lucide="indian-rupee" style="width:18px;height:18px;"></i></span>
+                <span class="trend up" id="trendRevenue">▲ 0%</span>
+            </div>
+            <div class="stat-value" id="metricRevenue" data-countup data-target="0" data-prefix="₹">0</div>
+            <div class="stat-label">Monthly Revenue</div>
+            <div class="stat-note" id="noteRevenue">vs. ₹0 last period</div>
+        </article>
+    </div>
+
+    <div class="chart-grid">
+        <article class="panel-card panel-body line-chart">
+            <div class="panel-head">
+                <h3 class="panel-title">Reports Generated</h3>
+                <div class="pill-tabs">
+                    <button type="button" class="chart-range-tab" data-range="daily">Daily</button>
+                    <button type="button" class="chart-range-tab" data-range="weekly">Weekly</button>
+                    <button type="button" class="chart-range-tab active" data-range="monthly">Monthly</button>
+                </div>
+            </div>
+
+            <svg id="reportsLineChart" viewBox="0 0 760 300" role="img" aria-label="Reports generated over time">
+                <defs>
+                    <linearGradient id="lineFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#93c5fd" stop-opacity="0.6" />
+                        <stop offset="100%" stop-color="#93c5fd" stop-opacity="0" />
+                    </linearGradient>
+                </defs>
+
+                <g stroke="#e2e8f0" stroke-width="1">
+                    <line x1="40" y1="40" x2="40" y2="260"></line>
+                    <line x1="40" y1="260" x2="730" y2="260"></line>
+                </g>
+
+                <path id="reportsAreaPath" class="area-path" d=""></path>
+                <path id="reportsLinePath" class="line-path" d=""></path>
+
+                <circle id="reportsPeakDot" cx="0" cy="0" r="5" fill="#2563eb"></circle>
+                <path id="reportsPeakStem" d="" stroke="#2563eb" stroke-width="1.5"></path>
+                <rect id="reportsPeakCard" x="0" y="0" width="160" height="38" rx="8" class="chart-callout"></rect>
+                <text id="reportsPeakDate" x="0" y="0" style="font-size:11px;fill:#64748b;"></text>
+                <text id="reportsPeakValue" x="0" y="0" style="font-size:12px;font-weight:600;fill:#1e293b;"></text>
+
+                <g id="reportsXAxis" style="font-size:11px;fill:#94a3b8;"></g>
+            </svg>
+        </article>
+
+        <article class="panel-card panel-body">
+            <div class="panel-head">
+                <h3 class="panel-title">Most Active Days</h3>
+            </div>
+            <div id="activeDaysSummary" style="margin-top:-4px;margin-bottom:10px;font-size:12px;color:#64748b;">Based on selected range</div>
+
+            <div class="bar-chart" id="activeDaysChart"></div>
+        </article>
+    </div>
+
+    <div class="third-grid">
+        <article class="panel-card panel-body" style="position: relative;">
+            <h3 class="panel-title">Student Distribution</h3>
+            <div style="position:relative;display:grid;place-items:center;">
+                <div class="donut"></div>
+                <div class="donut-center"><b id="donutCenterValue">0%</b><span id="donutCenterLabel">No data</span></div>
+            </div>
+            <div class="legend" id="distributionLegend"></div>
+            <a href="#" style="display:inline-flex;margin-top:12px;color:#3b82f6;text-decoration:none;font-size:13px;font-weight:500;">Show details →</a>
+        </article>
+
+        <article class="panel-card panel-body">
+            <h3 class="panel-title">Recent Activity</h3>
+            <div class="activity-list" style="margin-top:14px;" id="recentActivityList"></div>
+            <a href="/admin/reports" style="display:inline-flex;margin-top:12px;color:#3b82f6;text-decoration:none;font-size:13px;font-weight:500;">View all activity →</a>
+        </article>
+
+    </div>
+
+    <article class="panel-card panel-body table-card">
+        <div class="panel-head">
+            <h3 class="panel-title">Recent Reports</h3>
+            <div class="table-actions">
+                <input type="text" class="small-input" placeholder="Search reports" id="dashboardTableSearch">
+                <button class="btn-ghost" type="button"><i data-lucide="filter" style="width:14px;height:14px;"></i>Filter</button>
+                <a href="/admin/reports" style="font-size:13px;color:#3b82f6;text-decoration:none;">View all</a>
+            </div>
+        </div>
+
+        <div class="data-table-wrap">
+            <table class="data-table stagger-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>ID</th>
+                        <th>Student Name</th>
+                        <th>University</th>
+                        <th>Report Title</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="dashboardReportsBody"></tbody>
+            </table>
+        </div>
+
+        <div class="table-foot">
+            <span style="font-size:13px;color:#64748b;" id="dashboardReportsFoot">Showing 0-0 of 0 reports</span>
+            <div class="pager">
+                <button type="button" id="dashboardPrevPage">&lt;</button>
+                <button type="button" id="dashboardPage1" class="active">1</button>
+                <button type="button" id="dashboardPage2">2</button>
+                <button type="button" id="dashboardPage3">3</button>
+                <span style="font-size:12px;color:#94a3b8;">...</span>
+                <button type="button" id="dashboardLastPage">1</button>
+                <button type="button" id="dashboardNextPage">&gt;</button>
+            </div>
+        </div>
+    </article>
+</section>
+{% endblock %}
+
+{% block page_js %}
+<script>
+    const statusClass = (status) => {
+        const s = String(status || '').toLowerCase();
+        if (['generated', 'edited', 'final'].includes(s)) return 'status-generated';
+        if (['pending', 'generating'].includes(s)) return 'status-processing';
+        if (['error', 'failed'].includes(s)) return 'status-failed';
+        return 'status-draft';
+    };
+
+    const initials = (name) => {
+        const parts = String(name || 'NA').trim().split(/\s+/).filter(Boolean);
+        return (parts[0]?.[0] || 'N') + (parts[1]?.[0] || 'A');
+    };
+
+    const formatRelativeTime = (dateStr) => {
+        if (!dateStr) return 'unknown';
+        const d = new Date(dateStr);
+        const diff = Date.now() - d.getTime();
+        const mins = Math.floor(diff / 60000);
+        if (mins < 1) return 'just now';
+        if (mins < 60) return `${mins} minute${mins > 1 ? 's' : ''} ago`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs} hour${hrs > 1 ? 's' : ''} ago`;
+        const days = Math.floor(hrs / 24);
+        return `${days} day${days > 1 ? 's' : ''} ago`;
+    };
+
+    const pctChange = (current, previous) => {
+        if (!previous) return current ? 100 : 0;
+        return ((current - previous) / previous) * 100;
+    };
+
+    let dashboardAllReports = [];
+    let dashboardFilteredReports = [];
+    let dashboardCurrentPage = 1;
+    let recentActivityCache = [];
+    let dashboardAutoRefreshTimer = null;
+    let activityTimeTickTimer = null;
+    const DASHBOARD_PAGE_SIZE = 8;
+
+    const dashboardTableSearch = document.getElementById('dashboardTableSearch');
+    const dashboardPrevPage = document.getElementById('dashboardPrevPage');
+    const dashboardNextPage = document.getElementById('dashboardNextPage');
+    const dashboardPage1 = document.getElementById('dashboardPage1');
+    const dashboardPage2 = document.getElementById('dashboardPage2');
+    const dashboardPage3 = document.getElementById('dashboardPage3');
+    const dashboardLastPage = document.getElementById('dashboardLastPage');
+
+    const setTrend = (id, value) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const up = value >= 0;
+        el.className = `trend ${up ? 'up' : 'down'}`;
+        el.textContent = `${up ? '▲' : '▼'} ${Math.abs(value).toFixed(1)}%`;
+    };
+
+    const getReportDate = (report) => {
+        const raw = report?.createdAt || report?.updatedAt || report?.generatedAt || null;
+        if (!raw) return null;
+
+        // Prefer native parsing for ISO strings; fallback for date-only payloads.
+        let dt = new Date(raw);
+        if (!Number.isNaN(dt.getTime())) return dt;
+
+        if (typeof raw === 'string') {
+            const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (m) {
+                dt = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0, 0);
+            }
+        }
+        return Number.isNaN(dt.getTime()) ? null : dt;
+    };
+
+    const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+    const endOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+
+    const buildTimeSeries = (reports, range = 'monthly') => {
+        const now = new Date();
+        const normalized = Array.isArray(reports) ? reports : [];
+
+        if (range === 'daily') {
+            const daysBack = 14;
+            const out = [];
+            for (let i = daysBack - 1; i >= 0; i -= 1) {
+                const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                out.push({
+                    key,
+                    label: d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+                    value: 0,
+                    meta: d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                });
+            }
+
+            const index = Object.fromEntries(out.map((x, i) => [x.key, i]));
+            normalized.forEach((r) => {
+                const dt = getReportDate(r);
+                if (!dt) return;
+                const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+                if (index[key] !== undefined) out[index[key]].value += 1;
+            });
+            return out;
+        }
+
+        if (range === 'weekly') {
+            const weeksBack = 8;
+            const out = [];
+            const anchor = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+            for (let i = weeksBack - 1; i >= 0; i -= 1) {
+                const start = new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate() - (i * 7));
+                const key = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`;
+                out.push({
+                    key,
+                    label: start.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+                    value: 0,
+                    meta: `Week of ${start.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                });
+            }
+
+            const index = Object.fromEntries(out.map((x, i) => [x.key, i]));
+            normalized.forEach((r) => {
+                const dt = getReportDate(r);
+                if (!dt) return;
+                const start = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() - dt.getDay());
+                const key = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`;
+                if (index[key] !== undefined) out[index[key]].value += 1;
+            });
+            return out;
+        }
+
+        const monthsBack = 7;
+        const out = [];
+        for (let i = monthsBack - 1; i >= 0; i -= 1) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            out.push({
+                key,
+                label: d.toLocaleString('en-IN', { month: 'short' }),
+                value: 0,
+                meta: d.toLocaleString('en-IN', { month: 'short', year: 'numeric' })
+            });
+        }
+
+        const index = Object.fromEntries(out.map((m, i) => [m.key, i]));
+        normalized.forEach((r) => {
+            const dt = getReportDate(r);
+            if (!dt) return;
+            const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+            if (index[key] !== undefined) out[index[key]].value += 1;
+        });
+        return out;
+    };
+
+    const filterReportsByRange = (reports, range = 'monthly') => {
+        const now = new Date();
+        const rangeEnd = endOfDay(now);
+        const list = Array.isArray(reports) ? reports : [];
+        let start = null;
+
+        if (range === 'daily') {
+            start = startOfDay(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 13));
+        } else if (range === 'weekly') {
+            const anchor = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+            start = startOfDay(new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate() - (7 * 7)));
+        } else {
+            start = startOfDay(new Date(now.getFullYear(), now.getMonth() - 6, 1));
+        }
+
+        return list.filter((r) => {
+            const dt = getReportDate(r);
+            return dt && dt >= start && dt <= rangeEnd;
+        });
+    };
+
+    const renderLineChart = (series) => {
+        if (!series.length) return;
+        const max = Math.max(...series.map((m) => m.value), 1);
+        const left = 40;
+        const right = 730;
+        const bottom = 260;
+        const top = 70;
+        const step = (right - left) / (series.length - 1 || 1);
+        const points = series.map((m, i) => {
+            const x = left + i * step;
+            const y = bottom - ((m.value / max) * (bottom - top));
+            return { ...m, x, y };
+        });
+
+        const line = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+        const area = `${line} L${points[points.length - 1].x},${bottom} L${points[0].x},${bottom} Z`;
+        document.getElementById('reportsLinePath').setAttribute('d', line);
+        document.getElementById('reportsAreaPath').setAttribute('d', area);
+
+        const peak = points.reduce((a, b) => (a.value >= b.value ? a : b), points[0]);
+        document.getElementById('reportsPeakDot').setAttribute('cx', peak.x);
+        document.getElementById('reportsPeakDot').setAttribute('cy', peak.y);
+        document.getElementById('reportsPeakStem').setAttribute('d', `M${peak.x} ${peak.y} L${peak.x - 10} ${peak.y - 28}`);
+        const cardX = Math.max(60, Math.min(peak.x - 120, 560));
+        const cardY = Math.max(16, peak.y - 66);
+        document.getElementById('reportsPeakCard').setAttribute('x', cardX);
+        document.getElementById('reportsPeakCard').setAttribute('y', cardY);
+        document.getElementById('reportsPeakDate').setAttribute('x', cardX + 10);
+        document.getElementById('reportsPeakDate').setAttribute('y', cardY + 15);
+        document.getElementById('reportsPeakDate').textContent = peak.meta || peak.label;
+        document.getElementById('reportsPeakValue').setAttribute('x', cardX + 10);
+        document.getElementById('reportsPeakValue').setAttribute('y', cardY + 29);
+        document.getElementById('reportsPeakValue').textContent = `${peak.value.toLocaleString('en-IN')} reports`;
+
+        const axis = document.getElementById('reportsXAxis');
+        const showEvery = Math.max(1, Math.ceil(points.length / 7));
+        axis.innerHTML = points.map((p, i) => {
+            const label = (i % showEvery === 0 || i === points.length - 1) ? p.label : '';
+            return `<text x="${p.x - 10}" y="280">${label}</text>`;
+        }).join('');
+    };
+
+    const renderActiveDays = (reports, range = 'monthly') => {
+        const names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const byDay = [0, 0, 0, 0, 0, 0, 0];
+        reports.forEach((r) => {
+            const d = getReportDate(r);
+            if (d) byDay[d.getDay()] += 1;
+        });
+        const total = byDay.reduce((sum, v) => sum + v, 0);
+        const max = Math.max(...byDay, 0);
+        const idx = max > 0 ? byDay.indexOf(max) : -1;
+        const order = [1, 2, 3, 4, 5, 6, 0];
+        const rangeLabel = range === 'daily' ? 'last 14 days' : (range === 'weekly' ? 'last 8 weeks' : 'last 7 months');
+
+        const summaryEl = document.getElementById('activeDaysSummary');
+        if (summaryEl) {
+            summaryEl.textContent = max > 0
+                ? `${names[idx]} is most active with ${max.toLocaleString('en-IN')} reports (${rangeLabel}, total ${total.toLocaleString('en-IN')})`
+                : `No report activity found in ${rangeLabel}`;
+        }
+
+        document.getElementById('activeDaysChart').innerHTML = order.map((i, pos) => {
+            const h = max > 0 ? Math.round((byDay[i] / max) * 88) : 0;
+            const isTop = i === idx && max > 0;
+            return `
+                <div class="bar-col">
+                    <span class="bar-val" style="color:${isTop ? '#2563eb' : '#94a3b8'};">${byDay[i].toLocaleString('en-IN')}</span>
+                    <div class="bar"><div class="bar-fill ${isTop ? 'active' : ''}" style="height:${h}%; animation-delay:${0.05 + pos * 0.05}s;"></div></div>
+                    <span class="bar-label">${names[i]}</span>
+                </div>
+            `;
+        }).join('');
+    };
+
+    const renderDistribution = (users) => {
+        const donutEl = document.querySelector('.donut');
+        const centerValueEl = document.getElementById('donutCenterValue');
+        const centerLabelEl = document.getElementById('donutCenterLabel');
+        const legendEl = document.getElementById('distributionLegend');
+
+        const rows = Array.isArray(users) ? users : [];
+        if (!rows.length) {
+            donutEl.style.background = 'conic-gradient(#e2e8f0 0 100%)';
+            centerValueEl.textContent = '0%';
+            centerLabelEl.textContent = 'No students';
+            legendEl.innerHTML = '<div class="legend-item"><span class="dot" style="background:#94a3b8;"></span>No data</div>';
+            return;
+        }
+
+        const map = {};
+        rows.forEach((u) => {
+            const name = String(u?.university?.name || '').trim();
+            const key = name || 'Unassigned';
+            map[key] = (map[key] || 0) + 1;
+        });
+
+        const entries = Object.entries(map).sort((a, b) => b[1] - a[1]);
+        const total = rows.length;
+        const colors = ['#2563eb', '#8b5cf6', '#f59e0b'];
+
+        const topEntries = entries.slice(0, 2);
+        const remaining = entries.slice(2).reduce((sum, [, count]) => sum + count, 0);
+
+        const series = topEntries.map(([name, value], idx) => ({
+            name,
+            value,
+            color: colors[idx],
+        }));
+
+        if (remaining > 0) {
+            series.push({
+                name: 'Other Universities',
+                value: remaining,
+                color: colors[2],
+            });
+        }
+
+        let cursor = 0;
+        const segments = series.map((item, idx) => {
+            const pct = idx === series.length - 1
+                ? Math.max(0, 100 - cursor)
+                : (item.value / total) * 100;
+            const start = cursor;
+            cursor += pct;
+            return { ...item, pct, start, end: cursor };
+        });
+
+        const gradient = segments
+            .map((s) => `${s.color} ${s.start.toFixed(2)}% ${s.end.toFixed(2)}%`)
+            .join(', ');
+        donutEl.style.background = `conic-gradient(${gradient})`;
+
+        const lead = segments[0];
+        centerValueEl.textContent = `${Math.round(lead.pct)}%`;
+        centerLabelEl.textContent = `${lead.name} (${lead.value}/${total})`;
+
+        legendEl.innerHTML = segments.map((s) => {
+            const pct = Math.round(s.pct);
+            return `<div class="legend-item"><span class="dot" style="background:${s.color};"></span>${s.name} - ${pct}% (${s.value})</div>`;
+        }).join('');
+    };
+
+    const renderActivity = (users, reports) => {
+        const rows = [];
+
+        const sortedUsers = [...(Array.isArray(users) ? users : [])]
+            .filter((u) => u?.createdAt)
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 6);
+
+        const sortedReports = [...(Array.isArray(reports) ? reports : [])]
+            .filter((r) => r?.createdAt)
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 12);
+
+        sortedUsers.forEach((u) => {
+            rows.push({
+                type: 'user',
+                color: '#3b82f6',
+                text: `${u.name || 'Student'} joined the platform`,
+                time: u.createdAt,
+            });
+        });
+
+        sortedReports.forEach((r) => {
+            rows.push({
+                type: 'report',
+                color: ['generated', 'edited', 'final'].includes(String(r.status || '').toLowerCase()) ? '#22c55e' : '#f59e0b',
+                text: `${r.user?.name || 'Student'} submitted ${r.projectTitle || 'a report'}`,
+                time: r.createdAt,
+            });
+        });
+
+        const seen = new Set();
+        const merged = rows
+            .filter((r) => r.time)
+            .sort((a, b) => new Date(b.time) - new Date(a.time))
+            .filter((r) => {
+                const key = `${r.type}|${r.text}|${r.time}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            })
+            .slice(0, 6);
+
+        recentActivityCache = merged;
+
+        const listEl = document.getElementById('recentActivityList');
+        if (!listEl) return;
+        if (!merged.length) {
+            listEl.innerHTML = '<div class="activity-row"><div><div class="activity-text">No recent activity found.</div><div class="activity-time">Try again shortly</div></div></div>';
+            return;
+        }
+
+        listEl.innerHTML = merged.map((a) => {
+            return `<div class="activity-row"><span class="dot" style="background:${a.color};"></span><div><div class="activity-text">${a.text}</div><div class="activity-time" data-activity-time="${a.time}">${formatRelativeTime(a.time)}</div></div></div>`;
+        }).join('');
+    };
+
+    const refreshActivityTimeLabels = () => {
+        document.querySelectorAll('#recentActivityList [data-activity-time]').forEach((el) => {
+            const value = el.getAttribute('data-activity-time');
+            el.textContent = formatRelativeTime(value);
+        });
+    };
+
+    const renderRecentReports = (reports) => {
+        dashboardFilteredReports = reports;
+        const totalRows = reports.length;
+        const totalPages = Math.max(1, Math.ceil(totalRows / DASHBOARD_PAGE_SIZE));
+        dashboardCurrentPage = Math.min(dashboardCurrentPage, totalPages);
+
+        const start = (dashboardCurrentPage - 1) * DASHBOARD_PAGE_SIZE;
+        const rows = reports.slice(start, start + DASHBOARD_PAGE_SIZE);
+        const tbody = document.getElementById('dashboardReportsBody');
+
+        const firstNumber = Math.max(1, Math.min(dashboardCurrentPage - 1, totalPages - 2));
+        const pageNumbers = [0, 1, 2].map((i) => Math.min(totalPages, firstNumber + i));
+        [dashboardPage1, dashboardPage2, dashboardPage3].forEach((btn, idx) => {
+            const pageNumber = pageNumbers[idx];
+            btn.textContent = String(pageNumber);
+            btn.classList.toggle('active', pageNumber === dashboardCurrentPage);
+            btn.disabled = pageNumber < 1 || pageNumber > totalPages;
+        });
+        dashboardPrevPage.disabled = dashboardCurrentPage <= 1;
+        dashboardNextPage.disabled = dashboardCurrentPage >= totalPages;
+        dashboardLastPage.textContent = `${totalPages.toLocaleString('en-IN')}`;
+
+        if (!rows.length) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#94a3b8;">No reports found</td></tr>`;
+            document.getElementById('dashboardReportsFoot').textContent = 'Showing 0-0 of 0 reports';
+            return;
+        }
+
+        tbody.innerHTML = rows.map((r, i) => {
+            const userName = r.user?.name || 'Unknown';
+            const email = r.user?.email || '-';
+            const uni = r.university?.name || r.user?.university?.name || '-';
+            const id = String(r._id || '').slice(-6).toUpperCase();
+            return `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>RPT-${id}</td>
+                    <td><div class="name-cell"><span class="mini-avatar">${initials(userName)}</span><div class="name-meta"><strong>${userName}</strong><small>${email}</small></div></div></td>
+                    <td>${uni}</td>
+                    <td>${r.projectTitle || 'Untitled Report'}</td>
+                    <td>${r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-IN') : '-'}</td>
+                    <td><span class="status-badge ${statusClass(r.status)}">${r.status || 'draft'}</span></td>
+                    <td><div class="icon-actions"><a href="/admin/report/${r._id}"><i data-lucide="eye" style="width:16px;height:16px;"></i></a><button><i data-lucide="download" style="width:16px;height:16px;"></i></button><button><i data-lucide="more-horizontal" style="width:16px;height:16px;"></i></button></div></td>
+                </tr>
+            `;
+        }).join('');
+
+        document.getElementById('dashboardReportsFoot').textContent = `Showing ${start + 1}-${Math.min(start + rows.length, totalRows)} of ${totalRows.toLocaleString('en-IN')} reports`;
+        if (window.lucide) lucide.createIcons();
+        window.AdminUI?.staggerRows();
+    };
+
+    const jumpToDashboardPage = (nextPage) => {
+        const totalPages = Math.max(1, Math.ceil(dashboardFilteredReports.length / DASHBOARD_PAGE_SIZE));
+        dashboardCurrentPage = Math.max(1, Math.min(totalPages, nextPage));
+        renderRecentReports(dashboardFilteredReports);
+    };
+
+    const applyDashboardTableSearch = () => {
+        const q = String(dashboardTableSearch?.value || '').trim().toLowerCase();
+        const rows = dashboardAllReports.filter((r) => {
+            if (!q) return true;
+            const userName = String(r.user?.name || '').toLowerCase();
+            const title = String(r.projectTitle || '').toLowerCase();
+            const uni = String(r.university?.name || r.user?.university?.name || '').toLowerCase();
+            const status = String(r.status || '').toLowerCase();
+            return userName.includes(q) || title.includes(q) || uni.includes(q) || status.includes(q);
+        });
+        dashboardCurrentPage = 1;
+        renderRecentReports(rows);
+    };
+
+    const updateMetrics = (stats, users, reports, payments) => {
+        const now = new Date();
+        const startCurrent = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startPrev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+        const countInRange = (items, key, from, to) => items.filter((x) => {
+            const d = new Date(x?.[key]);
+            return !Number.isNaN(d.getTime()) && d >= from && d < to;
+        }).length;
+
+        const reportCurrent = countInRange(reports, 'createdAt', startCurrent, now);
+        const reportPrev = countInRange(reports, 'createdAt', startPrev, startCurrent);
+        const studentCurrent = countInRange(users, 'createdAt', startCurrent, now);
+        const studentPrev = countInRange(users, 'createdAt', startPrev, startCurrent);
+
+        const revenueInRange = (from, to) => payments.filter((p) => {
+            const d = new Date(p?.createdAt);
+            return !Number.isNaN(d.getTime()) && d >= from && d < to && String(p.status || '').toLowerCase() === 'completed';
+        }).reduce((s, p) => s + Number(p.totalAmount || 0), 0);
+
+        const revCurrent = revenueInRange(startCurrent, now);
+        const revPrev = revenueInRange(startPrev, startCurrent);
+
+        const setCount = (id, value, prefix = '') => {
+            const el = document.getElementById(id);
+            el.dataset.target = String(Math.max(0, Math.round(value)));
+            el.dataset.prefix = prefix;
+        };
+
+        const totalStudents = Number(stats.totalUsers || users.length || 0);
+        const totalReports = Number(stats.totalReports || reports.length || 0);
+
+        // Use active universities from actual student records (not master list size).
+        const activeUniversitiesNow = new Set(
+            users
+                .map((u) => String(u?.university?.name || '').trim())
+                .filter(Boolean)
+        ).size;
+        const activeUniversitiesPrev = new Set(
+            users
+                .filter((u) => {
+                    const d = new Date(u?.createdAt);
+                    return !Number.isNaN(d.getTime()) && d < startCurrent;
+                })
+                .map((u) => String(u?.university?.name || '').trim())
+                .filter(Boolean)
+        ).size;
+
+        const previousTotalStudents = Math.max(0, totalStudents - studentCurrent);
+        const previousTotalReports = Math.max(0, totalReports - reportCurrent);
+
+        setCount('metricStudents', totalStudents);
+        setCount('metricReports', totalReports);
+        setCount('metricUniversities', activeUniversitiesNow);
+        setCount('metricRevenue', revCurrent, '₹');
+
+        const studentTrend = pctChange(totalStudents, previousTotalStudents);
+        const reportTrend = pctChange(totalReports, previousTotalReports);
+        const uniTrend = pctChange(activeUniversitiesNow, activeUniversitiesPrev);
+        const revTrend = pctChange(revCurrent, revPrev);
+
+        setTrend('trendStudents', studentTrend);
+        setTrend('trendReports', reportTrend);
+        setTrend('trendUniversities', uniTrend);
+        setTrend('trendRevenue', revTrend);
+
+        document.getElementById('noteStudents').textContent = `vs. ${previousTotalStudents.toLocaleString('en-IN')} last period`;
+        document.getElementById('noteReports').textContent = `vs. ${previousTotalReports.toLocaleString('en-IN')} last period`;
+        document.getElementById('noteUniversities').textContent = `vs. ${activeUniversitiesPrev.toLocaleString('en-IN')} last period`;
+        document.getElementById('noteRevenue').textContent = `vs. ₹${Math.round(revPrev).toLocaleString('en-IN')} last period`;
+
+        window.AdminUI?.countUp();
+    };
+
+    const loadDashboard = async () => {
+        try {
+            const [stats, users, reports, payments] = await Promise.all([
+                window.AdminUI.adminApiGet('/api/admin/stats'),
+                window.AdminUI.adminApiGet('/api/admin/users'),
+                window.AdminUI.adminApiGet('/api/admin/reports'),
+                window.AdminUI.adminApiGet('/api/admin/payments'),
+            ]);
+
+            const safeStats = stats || {};
+            const safeUsers = Array.isArray(users) ? users : [];
+            const safeReports = Array.isArray(reports) ? reports : [];
+            const safePayments = Array.isArray(payments) ? payments : [];
+            dashboardAllReports = safeReports;
+
+            const renderByRange = (range) => {
+                const reportsInRange = filterReportsByRange(safeReports, range);
+                renderLineChart(buildTimeSeries(reportsInRange, range));
+                renderActiveDays(reportsInRange, range);
+            };
+
+            document.querySelectorAll('.chart-range-tab').forEach((tab) => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.chart-range-tab').forEach((t) => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    renderByRange(tab.dataset.range || 'monthly');
+                });
+            });
+
+            updateMetrics(safeStats, safeUsers, safeReports, safePayments);
+            renderByRange('monthly');
+            renderDistribution(safeUsers);
+            renderActivity(safeUsers, safeReports);
+            applyDashboardTableSearch();
+            if (window.lucide) lucide.createIcons();
+
+            // Keep recent activity fresh without requiring a full page refresh.
+            if (!dashboardAutoRefreshTimer) {
+                dashboardAutoRefreshTimer = setInterval(async () => {
+                    try {
+                        const [latestUsers, latestReports] = await Promise.all([
+                            window.AdminUI.adminApiGet('/api/admin/users'),
+                            window.AdminUI.adminApiGet('/api/admin/reports'),
+                        ]);
+                        renderActivity(Array.isArray(latestUsers) ? latestUsers : [], Array.isArray(latestReports) ? latestReports : []);
+                    } catch (e) {
+                        console.error('activity refresh failed', e);
+                    }
+                }, 45000);
+            }
+
+            if (!activityTimeTickTimer) {
+                activityTimeTickTimer = setInterval(refreshActivityTimeLabels, 60000);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    dashboardPrevPage?.addEventListener('click', () => jumpToDashboardPage(dashboardCurrentPage - 1));
+    dashboardNextPage?.addEventListener('click', () => jumpToDashboardPage(dashboardCurrentPage + 1));
+    dashboardPage1?.addEventListener('click', () => jumpToDashboardPage(Number(dashboardPage1.textContent || '1')));
+    dashboardPage2?.addEventListener('click', () => jumpToDashboardPage(Number(dashboardPage2.textContent || '2')));
+    dashboardPage3?.addEventListener('click', () => jumpToDashboardPage(Number(dashboardPage3.textContent || '3')));
+    dashboardLastPage?.addEventListener('click', () => jumpToDashboardPage(Number(dashboardLastPage.textContent || '1')));
+    dashboardTableSearch?.addEventListener('input', applyDashboardTableSearch);
+
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+</script>
+{% endblock %}

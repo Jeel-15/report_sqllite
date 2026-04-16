@@ -1,0 +1,993 @@
+{% extends "base.html" %}
+
+{% block title %}Create Report - Student{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background:
+            radial-gradient(1100px 420px at -10% -20%, rgba(59, 130, 246, 0.16), transparent 62%),
+            radial-gradient(980px 360px at 110% -16%, rgba(147, 197, 253, 0.25), transparent 58%),
+            linear-gradient(180deg, #f6f9ff 0%, #eef4ff 100%);
+        color: #0f172a;
+    }
+
+    .create-shell {
+        max-width: 1320px;
+        margin: 0 auto;
+        animation: createIn .4s ease both;
+    }
+    @keyframes createIn { from {opacity:0; transform: translateY(10px);} to {opacity:1; transform: translateY(0);} }
+
+    .create-intro-card {
+        border: 1px solid #dbe7ff;
+        border-radius: 16px;
+        background:
+            radial-gradient(460px 130px at -6% -20%, rgba(59, 130, 246, 0.14), transparent 70%),
+            radial-gradient(380px 120px at 110% -20%, rgba(147, 197, 253, 0.2), transparent 72%),
+            #ffffff;
+        box-shadow: 0 12px 30px rgba(37, 99, 235, 0.08);
+        padding: 18px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .intro-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        border: 1px solid #bfdbfe;
+        background: #eff6ff;
+        color: #1d4ed8;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .create-layout {
+        display: grid;
+        grid-template-columns: 200px minmax(0, 1fr) 240px;
+        gap: 16px;
+        align-items: flex-start;
+    }
+
+    .create-left-col {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .create-mid-col {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .create-right-col {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .step-card,
+    .summary-card,
+    .form-main-card {
+        border: 1px solid #dbe7ff;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.07);
+    }
+
+    .side-head {
+        font-size: 12px;
+        font-weight: 700;
+        color: #64748b;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+
+    .step-card {
+        position: sticky;
+        top: 84px;
+        padding: 12px;
+        background: #f8fbff;
+        border-color: #cfe0ff;
+    }
+
+    .step-list {
+        position: relative;
+        padding-left: 0.1rem;
+    }
+
+    .step-list::before {
+        content: '';
+        position: absolute;
+        left: 1.25rem;
+        top: 1.42rem;
+        bottom: 1.42rem;
+        width: 2px;
+        background: #dbe7ff;
+    }
+
+    .step-item {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        padding: 8px 8px;
+        border-radius: 11px;
+        color: #64748b;
+        font-size: 0.85rem;
+        transition: transform .25s ease, color .25s ease, background-color .25s ease;
+        transform-origin: left center;
+        position: relative;
+        z-index: 1;
+    }
+
+    .step-item.done {
+        color: #065f46;
+        background: #ecfdf5;
+    }
+
+    .step-item.active {
+        color: #1d4ed8;
+        background: #eff6ff;
+        transform: scale(1.02);
+    }
+
+    .step-dot {
+        width: 1.55rem;
+        height: 1.55rem;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border: 1px solid #bfdbfe;
+        color: #64748b;
+        background: #fff;
+        transition: transform .25s ease, background-color .25s ease, border-color .25s ease, color .25s ease;
+    }
+
+    .step-item.done .step-dot {
+        border-color: #10b981;
+        color: #fff;
+        background: #10b981;
+    }
+
+    .step-item.active .step-dot {
+        border-color: #2563eb;
+        color: #fff;
+        background: #2563eb;
+        transform: scale(1.06);
+    }
+
+    .step-item.upcoming .step-dot {
+        border-color: #dbe7ff;
+        color: #94a3b8;
+        background: #fff;
+    }
+
+    .form-main-card {
+        padding: 14px;
+        border-color: #cfe0ff;
+        box-shadow: 0 16px 34px rgba(37, 99, 235, 0.11);
+    }
+
+    .main-card-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e6efff;
+    }
+
+    .main-card-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1e3a8a;
+    }
+
+    .main-card-sub {
+        font-size: 12px;
+        color: #64748b;
+    }
+
+    .section-block {
+        border: 1px solid #d6e5ff;
+        border-radius: 14px;
+        background: #fbfdff;
+        padding: 12px;
+        margin-bottom: 14px;
+    }
+
+    .section-head {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .step-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #fff;
+        padding: 0.22rem 0.5rem;
+        background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+    }
+
+    .section-title {
+        font-family: var(--font-disp);
+        font-weight: 600;
+        margin-bottom: 0;
+        color: #0f172a;
+    }
+
+    #majorInfo {
+        display: inline-flex;
+        margin-top: 0.45rem;
+        border-radius: 999px;
+        padding: 0.24rem 0.62rem;
+        font-size: 0.73rem;
+        color: #1d4ed8;
+        background: #dbeafe;
+    }
+
+    .textarea-meta {
+        display: flex;
+        justify-content: flex-end;
+        font-size: 0.74rem;
+        color: #64748b;
+        margin-top: 0.24rem;
+    }
+
+    .skills-wrap {
+        border: 1.5px solid #dbe7ff;
+        border-radius: 10px;
+        background: #f8fbff;
+        padding: 0.42rem;
+        min-height: 44px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.36rem;
+        align-items: center;
+    }
+
+    .skill-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.38rem;
+        padding: 0.22rem 0.5rem;
+        border-radius: 999px;
+        font-size: 0.73rem;
+        color: #1d4ed8;
+        background: #dbeafe;
+    }
+
+    .skill-chip button {
+        border: 0;
+        background: transparent;
+        color: #1d4ed8;
+        line-height: 1;
+        padding: 0;
+    }
+
+    #keySkillsInput {
+        border: 0;
+        outline: 0;
+        flex: 1;
+        min-width: 140px;
+        background: transparent;
+        font-size: 0.84rem;
+        color: #0f172a;
+    }
+
+    .generate-btn {
+        width: 100%;
+        border: 0;
+        border-radius: 14px;
+        color: #fff;
+        font-weight: 600;
+        font-size: 16px;
+        padding: 16px;
+        background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+        box-shadow: 0 12px 25px rgba(37, 99, 235, 0.24);
+        cursor: pointer;
+        transition: transform .15s ease, box-shadow .15s ease;
+    }
+
+    .generate-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(37,99,235,0.3); }
+    .generate-btn:disabled { pointer-events: none; opacity: 0.9; }
+
+    .generate-wrap {
+        margin-top: 8px;
+        padding-top: 4px;
+    }
+
+    .generate-progress {
+        margin-top: 0.55rem;
+        height: 6px;
+        border-radius: 999px;
+        background: #dbeafe;
+        overflow: hidden;
+        display: none;
+    }
+
+    .generate-progress .bar {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+        transition: width 3s ease;
+    }
+
+    .generate-progress.active {
+        display: block;
+    }
+
+    .summary-card {
+        position: sticky;
+        top: 84px;
+        padding: 12px;
+        background: #f8fbff;
+        border-color: #cfe0ff;
+    }
+
+    .summary-row {
+        font-size: 0.8rem;
+        margin-bottom: 8px;
+        padding: 6px 8px;
+        border-radius: 10px;
+        background: #ffffff;
+        border: 1px solid #e5eeff;
+    }
+
+    .summary-label { color: #64748b; text-transform: none; font-size: 0.76rem; letter-spacing: 0.02em; font-weight: 600; }
+    .summary-val { color: #0f172a; font-weight: 600; }
+
+    .summary-edit {
+        display: inline-block;
+        margin-top: 0.2rem;
+        font-size: 0.72rem;
+        text-decoration: none;
+        color: #2563eb;
+    }
+
+    .summary-empty {
+        color: #94a3b8;
+        font-style: italic;
+        font-weight: 500;
+    }
+
+    .profile-progress-wrap {
+        margin-top: 0.8rem;
+        padding-top: 0.7rem;
+        border-top: 1px dashed #dbe7ff;
+    }
+
+    .profile-progress-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.73rem;
+        color: #64748b;
+        margin-bottom: 0.32rem;
+    }
+
+    .profile-progress {
+        width: 100%;
+        height: 7px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: #dbeafe;
+    }
+
+    .profile-progress > span {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+        transition: width .25s ease;
+    }
+
+    .form-label {
+        text-transform: none;
+        font-size: 13px;
+        font-weight: 500;
+        color: #64748b;
+    }
+
+    .form-control,
+    .form-select {
+        border: 1.5px solid #dbe7ff;
+        background: #f8fbff;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border: 1.5px solid #60a5fa;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+    }
+
+    .form-select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20'%3E%3Cpath fill='%2364748b' d='M5.25 7.5L10 12.25L14.75 7.5L16 8.75L10 14.75L4 8.75z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.6rem center;
+        background-size: 14px 14px;
+        padding-right: 2rem;
+    }
+
+    input[type="date"]::placeholder {
+        color: #94a3b8;
+    }
+
+    input[type="date"]::-webkit-datetime-edit {
+        color: #64748b;
+    }
+
+    @media (max-width: 991px) {
+        .create-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .create-left-col,
+        .create-right-col {
+            width: 100%;
+            max-width: none;
+        }
+
+        .step-card, .summary-card { position: static; }
+    }
+
+    @media (max-width: 768px) {
+        .form-main-card,
+        .section-block,
+        .step-card,
+        .summary-card {
+            border-radius: 12px;
+        }
+
+        .form-main-card {
+            padding: 0.75rem;
+        }
+
+        .section-block {
+            padding: 0.72rem;
+        }
+
+        .generate-btn {
+            font-size: 14px;
+            padding: 13px;
+            border-radius: 12px;
+        }
+
+        .step-list::before {
+            left: 1.05rem;
+        }
+
+        #majorInfo {
+            border-radius: 10px;
+            font-size: 0.7rem;
+            display: inline-block;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .create-intro-card {
+            padding: 13px 14px;
+        }
+
+        .main-card-head {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+        }
+
+        .step-card {
+            padding: 0.7rem;
+        }
+
+        .step-item {
+            padding: 0.56rem 0.4rem;
+            font-size: 0.8rem;
+        }
+
+        .step-dot {
+            width: 1.4rem;
+            height: 1.4rem;
+            font-size: 0.7rem;
+        }
+
+        .summary-card {
+            padding: 0.75rem;
+        }
+
+        .summary-row {
+            font-size: 0.76rem;
+        }
+
+        #keySkillsInput {
+            min-width: 110px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="create-shell">
+    <div class="create-intro-card mb-3">
+        <div>
+            <h2 class="mb-1">Generate Internship Report</h2>
+            <p class="text-muted mb-0">Profile data is pre-filled. Add project details and generate report.</p>
+        </div>
+        <div class="intro-badge">
+            <i class="bi bi-lightning-charge"></i>
+            <span>3-step guided flow</span>
+        </div>
+    </div>
+
+    <div id="profileBlock" class="alert alert-warning d-none mb-3">
+        Complete your profile details before generating report.
+        <a href="/student/profile" class="alert-link">Go to profile</a>
+    </div>
+
+    <form id="createReportForm" class="d-none">
+        <div class="create-layout">
+            <div class="create-left-col">
+                <aside class="step-card">
+                    <div class="side-head">Progress Steps</div>
+                    <div class="step-list">
+                        <div class="step-item active" id="step1"><span class="step-dot">1</span><span>Degree & Major</span></div>
+                        <div class="step-item upcoming" id="step2"><span class="step-dot">2</span><span>Project & Internship</span></div>
+                        <div class="step-item upcoming" id="step3"><span class="step-dot">3</span><span>Work Summary</span></div>
+                    </div>
+                </aside>
+            </div>
+
+            <div class="create-mid-col">
+                <div class="form-main-card">
+                    <div class="main-card-head">
+                        <div class="main-card-title">Report Builder</div>
+                        <div class="main-card-sub">Complete each section below</div>
+                    </div>
+                    <div id="formError" class="alert alert-danger d-none"></div>
+
+                    <section class="section-block" id="step1-section">
+                        <div class="section-head">
+                            <span class="step-badge">Step 1</span>
+                            <h3 class="section-title">Degree & Major</h3>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Degree *</label>
+                                <select class="form-select" id="degreeSelect" required></select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Major *</label>
+                                <select class="form-select" id="majorSelect" required></select>
+                                <div class="form-text" id="majorInfo"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="section-block" id="step2-section">
+                        <div class="section-head">
+                            <span class="step-badge">Step 2</span>
+                            <h3 class="section-title">Project & Internship</h3>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Project Title *</label>
+                                <input type="text" class="form-control" id="projectTitle" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Internship Title</label>
+                                <input type="text" class="form-control" id="internshipTitle">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Academic Year</label>
+                                <input type="text" class="form-control" id="academicYear" placeholder="2025-2026">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Position / Role</label>
+                                <input type="text" class="form-control" id="positionTitle">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Duration</label>
+                                <input type="text" class="form-control" id="duration" placeholder="e.g. 6 weeks">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="startDate">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="endDate">
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="section-block" id="step3-section">
+                        <div class="section-head">
+                            <span class="step-badge">Step 3</span>
+                            <h3 class="section-title">Work Summary</h3>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Brief Description *</label>
+                            <textarea class="form-control" id="briefDescription" rows="6" required></textarea>
+                            <div class="textarea-meta"><span id="briefCounter">0 characters</span></div>
+                        </div>
+                        <div>
+                            <label class="form-label">Key Skills</label>
+                            <div class="skills-wrap" id="skillsWrap">
+                                <div id="skillsChips"></div>
+                                <input type="text" id="keySkillsInput" placeholder="Type a skill and press Enter or comma">
+                            </div>
+                            <input type="hidden" id="keySkills">
+                        </div>
+                    </section>
+
+                    <div class="generate-wrap">
+                        <button type="submit" class="generate-btn" id="submitBtn">
+                            <i class="bi bi-file-earmark-text me-1"></i> Generate Report
+                        </button>
+                        <div class="generate-progress" id="generateProgress">
+                            <span class="bar" id="generateProgressBar"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="create-right-col">
+                <aside class="summary-card">
+                    <div class="side-head">Pre-filled from your profile</div>
+                    <div class="summary-row">
+                        <div class="summary-label">College</div>
+                        <div class="summary-val" id="summaryCollege">-</div>
+                    </div>
+                    <div class="summary-row">
+                        <div class="summary-label">Industry</div>
+                        <div class="summary-val" id="summaryIndustry">-</div>
+                    </div>
+                    <div class="summary-row mb-0">
+                        <div class="summary-label">Supervisor</div>
+                        <div class="summary-val" id="summarySupervisor">-</div>
+                    </div>
+
+                    <div class="profile-progress-wrap">
+                        <div class="profile-progress-top">
+                            <span>Profile Completion</span>
+                            <span id="profileCompletionText">0%</span>
+                        </div>
+                        <div class="profile-progress">
+                            <span id="profileCompletionBar"></span>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const token = localStorage.getItem('token');
+
+    let profile = null;
+    let degrees = [];
+    let majors = [];
+    let skillTags = [];
+
+    const authHeaders = (extra = {}) => ({
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        ...extra
+    });
+
+    const syncSkillInputValue = () => {
+        document.getElementById('keySkills').value = skillTags.join(', ');
+        const chips = document.getElementById('skillsChips');
+        chips.innerHTML = skillTags.map((s, i) => `
+            <span class="skill-chip">${s}<button type="button" onclick="removeSkill(${i})">&times;</button></span>
+        `).join('');
+    };
+
+    const addSkill = (raw) => {
+        const v = String(raw || '').trim();
+        if (!v) return;
+        if (skillTags.some(s => s.toLowerCase() === v.toLowerCase())) return;
+        skillTags.push(v);
+        syncSkillInputValue();
+        updateStepStates();
+    };
+
+    window.removeSkill = (idx) => {
+        skillTags = skillTags.filter((_, i) => i !== idx);
+        syncSkillInputValue();
+        updateStepStates();
+    };
+
+    const updateSummary = () => {
+        const makeSummaryValue = (value) => {
+            if (!value || String(value).trim() === '-' || String(value).trim() === '') {
+                return '<span class="summary-empty">Not set</span><a class="summary-edit" href="/student/profile">Edit Profile &rarr;</a>';
+            }
+            return String(value);
+        };
+
+        const college = profile?.college?.name || '';
+        const industry = profile?.industry?.name || '';
+        const supervisor = profile?.supervisorName || '';
+
+        document.getElementById('summaryCollege').innerHTML = makeSummaryValue(college);
+        document.getElementById('summaryIndustry').innerHTML = makeSummaryValue(industry);
+        document.getElementById('summarySupervisor').innerHTML = makeSummaryValue(supervisor);
+
+        const filled = [college, industry, supervisor].filter(v => String(v || '').trim()).length;
+        const percent = Math.round((filled / 3) * 100);
+        document.getElementById('profileCompletionText').textContent = `${percent}%`;
+        document.getElementById('profileCompletionBar').style.width = `${percent}%`;
+    };
+
+    const updateBriefCounter = () => {
+        const len = (document.getElementById('briefDescription').value || '').length;
+        document.getElementById('briefCounter').textContent = `${len} characters`;
+    };
+
+    const setStepState = (id, state) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        el.classList.remove('done', 'active', 'upcoming');
+        el.classList.add(state);
+
+        const dot = el.querySelector('.step-dot');
+        if (dot) {
+            if (state === 'done') dot.textContent = '✓';
+            else dot.textContent = id.replace('step', '');
+        }
+    };
+
+    const updateStepStates = (activeStepNum = 1) => {
+        [1, 2, 3].forEach((n) => {
+            if (n < activeStepNum) setStepState(`step${n}`, 'done');
+            else if (n === activeStepNum) setStepState(`step${n}`, 'active');
+            else setStepState(`step${n}`, 'upcoming');
+        });
+    };
+
+    const initStepScrollSpy = () => {
+        const stepSections = [
+            { id: 'step1-section', stepNum: 1 },
+            { id: 'step2-section', stepNum: 2 },
+            { id: 'step3-section', stepNum: 3 },
+        ];
+
+        const visible = new Set();
+        const sectionToStep = new Map(stepSections.map(s => [s.id, s.stepNum]));
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) visible.add(entry.target.id);
+                else visible.delete(entry.target.id);
+            });
+
+            if (!visible.size) return;
+
+            const active = Math.min(...Array.from(visible).map(id => sectionToStep.get(id)).filter(Boolean));
+            updateStepStates(active || 1);
+        }, {
+            threshold: 0.3,
+            rootMargin: '-8% 0px -50% 0px'
+        });
+
+        stepSections.forEach(({ id }) => {
+            const el = document.getElementById(id);
+            if (el) observer.observe(el);
+        });
+    };
+
+    const setOptions = (el, items, selected = '', labelKey = 'name') => {
+        el.innerHTML = '<option value="">Select</option>' + (items || []).map(i => {
+            const selectedAttr = String(selected) === String(i._id) ? 'selected' : '';
+            return `<option value="${i._id}" ${selectedAttr}>${i[labelKey]}</option>`;
+        }).join('');
+    };
+
+    const loadMajors = async (degreeId, selected = '') => {
+        const majorSelect = document.getElementById('majorSelect');
+        if (!degreeId) {
+            majors = [];
+            setOptions(majorSelect, []);
+            return;
+        }
+        const res = await fetch(`/api/student/majors/${degreeId}`, {
+            credentials: 'include',
+            headers: authHeaders()
+        });
+        majors = await res.json();
+        setOptions(majorSelect, majors, selected);
+        renderMajorInfo(selected || majorSelect.value);
+    };
+
+    const renderMajorInfo = async (majorId) => {
+        if (!majorId) {
+            document.getElementById('majorInfo').textContent = '';
+            return;
+        }
+        const res = await fetch(`/api/student/major/${majorId}`, {
+            credentials: 'include',
+            headers: authHeaders()
+        });
+        const major = await res.json();
+        document.getElementById('majorInfo').textContent =
+            `Language: ${major.reportLanguage || 'English'} | Content: ${major.reportContentType || 'Text'}`;
+    };
+
+    const bootstrapForm = async () => {
+        const [profileRes, degreeRes] = await Promise.all([
+            fetch('/api/student/profile', { credentials: 'include', headers: authHeaders() }),
+            fetch('/api/student/degrees', { credentials: 'include', headers: authHeaders() })
+        ]);
+
+        profile = await profileRes.json();
+        degrees = await degreeRes.json();
+
+        if (!profile.profileCompleted) {
+            document.getElementById('profileBlock').classList.remove('d-none');
+            return;
+        }
+
+        const form = document.getElementById('createReportForm');
+        form.classList.remove('d-none');
+
+        const degreeSelect = document.getElementById('degreeSelect');
+        setOptions(degreeSelect, degrees, profile.degree?._id || '');
+
+        if (profile.degree?._id) {
+            await loadMajors(profile.degree._id, profile.major?._id || '');
+        } else {
+            setOptions(document.getElementById('majorSelect'), []);
+        }
+
+        document.getElementById('degreeSelect').addEventListener('change', async (e) => {
+            await loadMajors(e.target.value, '');
+            updateStepStates();
+        });
+
+        document.getElementById('majorSelect').addEventListener('change', async (e) => {
+            await renderMajorInfo(e.target.value);
+            updateStepStates();
+        });
+
+        updateSummary();
+        updateStepStates();
+    };
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const defaultBtnHtml = '<i class="bi bi-file-earmark-text me-1"></i> Generate Report';
+        try {
+            await bootstrapForm();
+            document.getElementById('briefDescription').addEventListener('input', () => {
+                updateBriefCounter();
+                updateStepStates();
+            });
+
+            ['projectTitle','internshipTitle','academicYear','positionTitle','duration','startDate','endDate']
+                .forEach(id => document.getElementById(id).addEventListener('input', updateStepStates));
+
+            const keySkillsInput = document.getElementById('keySkillsInput');
+            keySkillsInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault();
+                    addSkill(keySkillsInput.value.replace(',', ''));
+                    keySkillsInput.value = '';
+                }
+            });
+            keySkillsInput.addEventListener('blur', () => {
+                addSkill(keySkillsInput.value);
+                keySkillsInput.value = '';
+            });
+
+            updateBriefCounter();
+            updateStepStates(1);
+            initStepScrollSpy();
+
+            const form = document.getElementById('createReportForm');
+            form.dataset.defaultBtnHtml = defaultBtnHtml;
+        } catch(e) {
+            console.error(e);
+            document.getElementById('formError').innerText = 'Unable to load form data.';
+            document.getElementById('formError').classList.remove('d-none');
+        }
+    });
+
+    document.getElementById('createReportForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const btn = document.getElementById('submitBtn');
+        const progressWrap = document.getElementById('generateProgress');
+        const progressBar = document.getElementById('generateProgressBar');
+        const defaultBtnHtml = document.getElementById('createReportForm').dataset.defaultBtnHtml || '<i class="bi bi-file-earmark-text me-1"></i> Generate Report';
+        const errAlert = document.getElementById('formError');
+        
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> AI is generating your report...';
+        progressWrap.classList.add('active');
+        progressBar.style.width = '0%';
+        requestAnimationFrame(() => {
+            progressBar.style.width = '70%';
+        });
+        errAlert.classList.add('d-none');
+        
+        const payload = {
+            degree: document.getElementById('degreeSelect').value,
+            major: document.getElementById('majorSelect').value,
+            projectTitle: document.getElementById('projectTitle').value,
+            internshipTitle: document.getElementById('internshipTitle').value,
+            academicYear: document.getElementById('academicYear').value,
+            positionTitle: document.getElementById('positionTitle').value,
+            duration: document.getElementById('duration').value,
+            startDate: document.getElementById('startDate').value,
+            endDate: document.getElementById('endDate').value,
+            supervisorName: profile?.supervisorName || '',
+            supervisorContact: profile?.supervisorContact || '',
+            briefDescription: document.getElementById('briefDescription').value,
+            keySkills: document.getElementById('keySkills').value
+        };
+
+        if (!payload.major || !payload.projectTitle || !payload.briefDescription) {
+            errAlert.innerText = 'Please fill required fields.';
+            errAlert.classList.remove('d-none');
+            btn.disabled = false;
+            btn.innerHTML = defaultBtnHtml;
+            progressWrap.classList.remove('active');
+            progressBar.style.width = '0%';
+            return;
+        }
+        
+        try {
+            const res = await fetch('/api/reports/', {
+                method: 'POST',
+                credentials: 'include',
+                headers: authHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify(payload)
+            });
+            
+            const data = await res.json();
+            if (res.ok) {
+                window.location.href = `/student/report/${data.reportId}`;
+            } else {
+                errAlert.innerText = data.message || 'Generation failed.';
+                errAlert.classList.remove('d-none');
+                btn.disabled = false;
+                btn.innerHTML = defaultBtnHtml;
+                progressWrap.classList.remove('active');
+                progressBar.style.width = '0%';
+            }
+        } catch (err) {
+            errAlert.innerText = 'Network Error.';
+            errAlert.classList.remove('d-none');
+            btn.disabled = false;
+            btn.innerHTML = defaultBtnHtml;
+            progressWrap.classList.remove('active');
+            progressBar.style.width = '0%';
+        }
+    });
+</script>
+{% endblock %}

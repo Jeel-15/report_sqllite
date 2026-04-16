@@ -1,0 +1,38 @@
+<!-- NAV -->
+<nav id="nav">
+  <a href="{{ url_for('pages.home') }}" class="nav-logo">
+    <div class="nav-logo-mark">
+      <svg viewBox="0 0 16 16"><path d="M3 2h10v1H3zM3 5h7v1H3zM3 8h10v1H3zM3 11h5v1H3z"/></svg>
+    </div>
+    ReportGen
+  </a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#preview">Preview</a></li>
+    <li><a href="#testimonials">Reviews</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+  </ul>
+  <div class="nav-actions" id="navUserActions">
+    <a href="{{ url_for('pages.login') }}" class="nav-cta-btn nav-login-btn">Login</a>
+    <a href="{{ url_for('pages.register') }}" class="nav-cta-btn" data-generate-link="1">Generate Free →</a>
+  </div>
+
+  <!-- Mobile Hamburger Menu -->
+  <button id="nav-menu-toggle" class="nav-menu-toggle">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+</nav>
+
+<!-- Mobile Menu Drawer -->
+<div id="nav-menu-drawer" class="nav-menu-drawer">
+  <ul class="nav-menu-links" id="navMenuLinks">
+    <li><a href="#how" class="nav-menu-link">How it works</a></li>
+    <li><a href="#preview" class="nav-menu-link">Preview</a></li>
+    <li><a href="#testimonials" class="nav-menu-link">Reviews</a></li>
+    <li><a href="#pricing" class="nav-menu-link">Pricing</a></li>
+    <li><a href="{{ url_for('pages.login') }}" class="nav-menu-link">Login</a></li>
+    <li><a href="{{ url_for('pages.register') }}" class="nav-menu-cta" data-generate-link="1">Generate Free →</a></li>
+  </ul>
+</div>

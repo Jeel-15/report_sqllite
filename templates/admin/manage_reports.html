@@ -1,0 +1,233 @@
+{% extends "admin/layout.html" %}
+{% set active_page = 'reports' %}
+
+{% block title %}Reports - ReportGen Admin{% endblock %}
+
+{% block admin_content %}
+<section class="dashboard-grid">
+    <div>
+        <h1 class="page-title">Reports</h1>
+        <p class="page-subtitle">Track report generation lifecycle and export-ready submissions.</p>
+    </div>
+
+    <article class="panel-card panel-body table-card">
+        <div class="toolbar">
+            <input class="small-input" type="date" id="reportFromDate">
+            <input class="small-input" type="date" id="reportToDate">
+            <select class="small-input" id="reportUniversityFilter"><option value="">All Universities</option></select>
+            <select class="small-input" id="reportTemplateFilter"><option value="">All Templates</option></select>
+            <select class="small-input" id="reportStatusFilter">
+                <option value="">All Status</option>
+                <option value="generated">Generated</option>
+                <option value="pending">Pending</option>
+                <option value="generating">Generating</option>
+                <option value="edited">Edited</option>
+                <option value="final">Final</option>
+                <option value="error">Error</option>
+            </select>
+            <input class="small-input" type="text" placeholder="Search report title" id="reportSearch" style="margin-left:auto;">
+        </div>
+
+        <div class="data-table-wrap">
+            <table class="data-table stagger-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Report Title</th>
+                        <th>Student Name</th>
+                        <th>Template Used</th>
+                        <th>Generated Date</th>
+                        <th>Pages</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="8" style="text-align:center;color:#94a3b8;">Loading reports...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-foot">
+            <span style="font-size:13px;color:#64748b;" id="reportsFoot">Showing 0-0 of 0 reports</span>
+            <div class="pager">
+                <button type="button" id="reportsPrevPage">&lt;</button>
+                <button type="button" id="reportsPage1" class="active">1</button>
+                <button type="button" id="reportsPage2">2</button>
+                <button type="button" id="reportsPage3">3</button>
+                <span style="font-size:12px;color:#94a3b8;">...</span>
+                <button type="button" id="reportsLastPage">1</button>
+                <button type="button" id="reportsNextPage">&gt;</button>
+            </div>
+        </div>
+    </article>
+</section>
+{% endblock %}
+
+{% block page_js %}
+<script>
+    const reportBody = document.querySelector('.data-table tbody');
+    const reportFromDate = document.getElementById('reportFromDate');
+    const reportToDate = document.getElementById('reportToDate');
+    const reportUniversityFilter = document.getElementById('reportUniversityFilter');
+    const reportTemplateFilter = document.getElementById('reportTemplateFilter');
+    const reportStatusFilter = document.getElementById('reportStatusFilter');
+    const reportSearch = document.getElementById('reportSearch');
+    const reportsFoot = document.getElementById('reportsFoot');
+    const reportsLastPage = document.getElementById('reportsLastPage');
+    const reportsPrevPage = document.getElementById('reportsPrevPage');
+    const reportsNextPage = document.getElementById('reportsNextPage');
+    const reportsPage1 = document.getElementById('reportsPage1');
+    const reportsPage2 = document.getElementById('reportsPage2');
+    const reportsPage3 = document.getElementById('reportsPage3');
+
+    let allReports = [];
+    let filteredReports = [];
+    let reportsCurrentPage = 1;
+    const REPORTS_PAGE_SIZE = 10;
+
+    const statusClass = (status) => {
+        const s = String(status || '').toLowerCase();
+        if (['generated', 'edited', 'final'].includes(s)) return 'status-generated';
+        if (['pending', 'generating'].includes(s)) return 'status-processing';
+        if (['error', 'failed'].includes(s)) return 'status-failed';
+        return 'status-draft';
+    };
+
+    const renderReports = (rows) => {
+        filteredReports = rows;
+        const totalRows = rows.length;
+        const totalPages = Math.max(1, Math.ceil(totalRows / REPORTS_PAGE_SIZE));
+        reportsCurrentPage = Math.min(reportsCurrentPage, totalPages);
+
+        if (!totalRows) {
+            reportBody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#94a3b8;">No reports found.</td></tr>';
+            reportsFoot.textContent = 'Showing 0-0 of 0 reports';
+            reportsLastPage.textContent = '1';
+            [reportsPage1, reportsPage2, reportsPage3].forEach((btn, idx) => {
+                btn.textContent = String(idx + 1);
+                btn.classList.toggle('active', idx === 0);
+            });
+            return;
+        }
+
+        const start = (reportsCurrentPage - 1) * REPORTS_PAGE_SIZE;
+        const pageRows = rows.slice(start, start + REPORTS_PAGE_SIZE);
+        const visibleStart = start + 1;
+        const visibleEnd = Math.min(start + pageRows.length, totalRows);
+
+        const firstNumber = Math.max(1, Math.min(reportsCurrentPage - 1, totalPages - 2));
+        const pageNumbers = [0, 1, 2].map((i) => Math.min(totalPages, firstNumber + i));
+        [reportsPage1, reportsPage2, reportsPage3].forEach((btn, idx) => {
+            const pageNumber = pageNumbers[idx];
+            btn.textContent = String(pageNumber);
+            btn.classList.toggle('active', pageNumber === reportsCurrentPage);
+            btn.disabled = pageNumber < 1 || pageNumber > totalPages;
+        });
+
+        reportsPrevPage.disabled = reportsCurrentPage <= 1;
+        reportsNextPage.disabled = reportsCurrentPage >= totalPages;
+        reportsLastPage.textContent = `${totalPages.toLocaleString('en-IN')}`;
+
+        reportBody.innerHTML = pageRows.map((r) => {
+            const id = `RPT-${String(r._id || '').slice(-6).toUpperCase()}`;
+            const templateUsed = r.major?.name || r.degree?.name || 'Default Template';
+            const pages = Math.max(10, Math.round((r.generatedContent ? Object.keys(r.generatedContent).length : 12) * 2));
+            return `
+                <tr>
+                    <td>${id}</td>
+                    <td>${r.projectTitle || 'Untitled Report'}</td>
+                    <td>${r.user?.name || '-'}</td>
+                    <td>${templateUsed}</td>
+                    <td>${r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-IN') : '-'}</td>
+                    <td>${pages}</td>
+                    <td><span class="status-badge ${statusClass(r.status)}">${r.status || 'draft'}</span></td>
+                    <td>
+                        <div class="icon-actions">
+                            <a href="/admin/report/${r._id}" title="View"><i data-lucide="eye" style="width:16px;height:16px;"></i></a>
+                            <button title="Download PDF"><i data-lucide="file-down" style="width:16px;height:16px;"></i></button>
+                            <button class="delete-report" data-id="${r._id}" title="Delete"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        reportsFoot.textContent = `Showing ${visibleStart}-${visibleEnd} of ${totalRows.toLocaleString('en-IN')} reports`;
+        if (window.lucide) lucide.createIcons();
+        bindDeleteActions();
+        window.AdminUI?.staggerRows();
+    };
+
+    const jumpToReportsPage = (nextPage) => {
+        const totalPages = Math.max(1, Math.ceil(filteredReports.length / REPORTS_PAGE_SIZE));
+        reportsCurrentPage = Math.max(1, Math.min(totalPages, nextPage));
+        renderReports(filteredReports);
+    };
+
+    const bindDeleteActions = () => {
+        document.querySelectorAll('.delete-report').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                if (!confirm('Delete this report?')) return;
+                await fetch(`/api/admin/reports/${btn.dataset.id}`, {
+                    method: 'DELETE',
+                    headers: { Authorization: `Bearer ${window.AdminUI.getAuthToken()}` }
+                });
+                await loadReports();
+            });
+        });
+    };
+
+    const fillReportFilters = (reports) => {
+        const universities = [...new Set(reports.map((r) => r.university?.name).filter(Boolean))].sort();
+        const templates = [...new Set(reports.map((r) => r.major?.name || r.degree?.name).filter(Boolean))].sort();
+
+        reportUniversityFilter.innerHTML = '<option value="">All Universities</option>' + universities.map((u) => `<option value="${u}">${u}</option>`).join('');
+        reportTemplateFilter.innerHTML = '<option value="">All Templates</option>' + templates.map((t) => `<option value="${t}">${t}</option>`).join('');
+    };
+
+    const applyFilters = () => {
+        const q = reportSearch.value.trim().toLowerCase();
+        const uni = reportUniversityFilter.value;
+        const tpl = reportTemplateFilter.value;
+        const status = reportStatusFilter.value;
+        const from = reportFromDate.value ? new Date(reportFromDate.value) : null;
+        const to = reportToDate.value ? new Date(reportToDate.value + 'T23:59:59') : null;
+
+        const rows = allReports.filter((r) => {
+            const created = r.createdAt ? new Date(r.createdAt) : null;
+            const templateUsed = r.major?.name || r.degree?.name || '';
+            const matchesQ = !q || String(r.projectTitle || '').toLowerCase().includes(q) || String(r.user?.name || '').toLowerCase().includes(q);
+            const matchesUni = !uni || (r.university?.name || '') === uni;
+            const matchesTpl = !tpl || templateUsed === tpl;
+            const matchesStatus = !status || String(r.status || '').toLowerCase() === status;
+            const matchesFrom = !from || (created && created >= from);
+            const matchesTo = !to || (created && created <= to);
+            return matchesQ && matchesUni && matchesTpl && matchesStatus && matchesFrom && matchesTo;
+        });
+
+        reportsCurrentPage = 1;
+        renderReports(rows);
+    };
+
+    const loadReports = async () => {
+        allReports = await window.AdminUI.adminApiGet('/api/admin/reports') || [];
+        fillReportFilters(allReports);
+        applyFilters();
+    };
+
+    [reportFromDate, reportToDate, reportUniversityFilter, reportTemplateFilter, reportStatusFilter].forEach((el) => {
+        el.addEventListener('change', applyFilters);
+    });
+    reportSearch.addEventListener('input', applyFilters);
+
+    reportsPrevPage.addEventListener('click', () => jumpToReportsPage(reportsCurrentPage - 1));
+    reportsNextPage.addEventListener('click', () => jumpToReportsPage(reportsCurrentPage + 1));
+    reportsPage1.addEventListener('click', () => jumpToReportsPage(Number(reportsPage1.textContent || '1')));
+    reportsPage2.addEventListener('click', () => jumpToReportsPage(Number(reportsPage2.textContent || '2')));
+    reportsPage3.addEventListener('click', () => jumpToReportsPage(Number(reportsPage3.textContent || '3')));
+    reportsLastPage.addEventListener('click', () => jumpToReportsPage(Number(reportsLastPage.textContent || '1')));
+
+    document.addEventListener('DOMContentLoaded', loadReports);
+</script>
+{% endblock %}

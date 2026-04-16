@@ -1,0 +1,239 @@
+<!-- Admin Dark Theme CSS Override - Included via extra_css block -->
+<style>
+    body {
+        background:
+            radial-gradient(1000px 340px at -10% -25%, rgba(37, 99, 235, 0.24), transparent 60%),
+            radial-gradient(950px 360px at 110% -20%, rgba(59, 130, 246, 0.2), transparent 58%),
+            linear-gradient(180deg, #0a0f1e, #131a2d);
+        color: #e8f0ff;
+    }
+
+    .container.main-content h2,
+    .container.main-content h3,
+    .container.main-content h5,
+    .container.main-content h6,
+    .container.main-content .card-title {
+        color: #e8f0ff !important;
+    }
+
+    .container.main-content .text-muted,
+    .container.main-content p {
+        color: #9fb3dc !important;
+    }
+
+    .container.main-content .card {
+        border: 1px solid rgba(116, 146, 219, 0.26) !important;
+        background: rgba(14, 24, 45, 0.88) !important;
+        box-shadow: 0 16px 36px rgba(5, 12, 32, 0.35);
+    }
+
+    .container.main-content .card .card-body {
+        color: #e8f0ff;
+    }
+
+    .container.main-content .card.bg-primary,
+    .container.main-content .card.bg-success,
+    .container.main-content .card.bg-info,
+    .container.main-content .card.bg-warning,
+    .container.main-content .card.bg-secondary,
+    .container.main-content .card.bg-dark {
+        border: none !important;
+    }
+
+    .container.main-content .card.bg-primary { background: linear-gradient(135deg, #1d4ed8, #2563eb) !important; }
+    .container.main-content .card.bg-success { background: linear-gradient(135deg, #047857, #059669) !important; }
+    .container.main-content .card.bg-info { background: linear-gradient(135deg, #1e40af, #3b82f6) !important; }
+    .container.main-content .card.bg-warning { background: linear-gradient(135deg, #b45309, #d97706) !important; }
+    .container.main-content .card.bg-secondary { background: linear-gradient(135deg, #374151, #4b5563) !important; }
+    .container.main-content .card.bg-dark { background: linear-gradient(135deg, #1e293b, #334155) !important; }
+
+    .container.main-content .card.bg-primary .card-title,
+    .container.main-content .card.bg-success .card-title,
+    .container.main-content .card.bg-info .card-title,
+    .container.main-content .card.bg-warning .card-title,
+    .container.main-content .card.bg-secondary .card-title,
+    .container.main-content .card.bg-dark .card-title,
+    .container.main-content .card.bg-primary h3,
+    .container.main-content .card.bg-success h3,
+    .container.main-content .card.bg-info h3,
+    .container.main-content .card.bg-warning h3,
+    .container.main-content .card.bg-secondary h3,
+    .container.main-content .card.bg-dark h3 {
+        color: #ffffff !important;
+    }
+
+    .container.main-content .card.border-success {
+        border-color: rgba(16, 185, 129, 0.4) !important;
+        background: rgba(14, 24, 45, 0.88) !important;
+    }
+
+    .container.main-content .table {
+        color: #e8f0ff;
+    }
+
+    .container.main-content .table thead th {
+        border-bottom-color: rgba(116, 146, 219, 0.26);
+        color: #9fb3dc;
+        background: rgba(24, 38, 69, 0.5);
+    }
+
+    .container.main-content .table td {
+        border-color: rgba(116, 146, 219, 0.18);
+        color: #dbeafe;
+    }
+
+    .container.main-content .table-hover tbody tr:hover {
+        background: rgba(59, 130, 246, 0.08) !important;
+    }
+
+    .container.main-content .form-control,
+    .container.main-content .form-select {
+        background: rgba(229, 238, 255, 0.08);
+        border: 1px solid rgba(148, 183, 255, 0.3);
+        color: #f4f8ff;
+    }
+
+    .container.main-content .form-control::placeholder {
+        color: rgba(188, 206, 237, 0.6);
+    }
+
+    .container.main-content .form-control:focus,
+    .container.main-content .form-select:focus {
+        border-color: rgba(96, 165, 250, 0.85);
+        box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.18);
+        background: rgba(229, 238, 255, 0.13);
+        color: #fff;
+    }
+
+    .container.main-content .form-label {
+        color: #9fb3dc;
+    }
+
+    .container.main-content .btn-primary {
+        border: 0;
+        background: linear-gradient(90deg, #2563eb, #3b82f6);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+    }
+
+    .container.main-content .btn-primary:hover {
+        background: linear-gradient(90deg, #1d4ed8, #2563eb);
+    }
+
+    .container.main-content .btn-outline-primary {
+        border-color: rgba(148, 183, 255, 0.45);
+        color: #bfdbfe;
+        background: rgba(59, 130, 246, 0.08);
+    }
+
+    .container.main-content .btn-outline-primary:hover {
+        background: rgba(59, 130, 246, 0.2);
+        border-color: rgba(96, 165, 250, 0.7);
+        color: #dbeafe;
+    }
+
+    .container.main-content .btn-outline-secondary {
+        border-color: rgba(148, 183, 255, 0.3);
+        color: #9fb3dc;
+    }
+
+    .container.main-content .btn-outline-danger {
+        border-color: rgba(252, 165, 165, 0.4);
+        color: #fca5a5;
+        background: rgba(220, 38, 38, 0.06);
+    }
+
+    .container.main-content .btn-success {
+        background: linear-gradient(90deg, #059669, #10b981);
+        border: 0;
+    }
+
+    .container.main-content .btn-danger {
+        background: linear-gradient(90deg, #dc2626, #ef4444);
+        border: 0;
+    }
+
+    .container.main-content .btn-warning {
+        background: linear-gradient(90deg, #d97706, #f59e0b);
+        border: 0;
+    }
+
+    .container.main-content .modal-content {
+        background: rgba(14, 24, 45, 0.98);
+        border: 1px solid rgba(116, 146, 219, 0.26);
+        color: #e8f0ff;
+    }
+
+    .container.main-content .modal-header {
+        border-bottom-color: rgba(116, 146, 219, 0.26);
+    }
+
+    .container.main-content .modal-footer {
+        border-top-color: rgba(116, 146, 219, 0.26);
+    }
+
+    .container.main-content .alert {
+        border-radius: 12px;
+    }
+
+    .container.main-content .alert-danger {
+        border: 1px solid rgba(252, 165, 165, 0.5);
+        background: rgba(127, 29, 29, 0.35);
+        color: #fecaca;
+    }
+
+    .container.main-content .alert-success {
+        border: 1px solid rgba(110, 231, 183, 0.5);
+        background: rgba(6, 78, 59, 0.35);
+        color: #a7f3d0;
+    }
+
+    .container.main-content .alert-warning {
+        border: 1px solid rgba(253, 230, 138, 0.5);
+        background: rgba(146, 64, 14, 0.35);
+        color: #fde68a;
+    }
+
+    .container.main-content .badge {
+        font-weight: 600;
+    }
+
+    .container.main-content .spinner-border.text-primary {
+        color: #3b82f6 !important;
+    }
+
+    .container.main-content .input-group .btn {
+        border-color: rgba(148, 183, 255, 0.3);
+        color: #bfdbfe;
+        background: rgba(59, 130, 246, 0.08);
+    }
+
+    .container.main-content .input-group-text {
+        background: rgba(24, 38, 69, 0.5);
+        border-color: rgba(148, 183, 255, 0.3);
+        color: #9fb3dc;
+    }
+
+    .container.main-content a:not(.btn):not(.nav-link):not(.nav-cta-btn):not(.nav-logo):not(.nav-menu-link):not(.nav-menu-cta) {
+        color: #93c5fd;
+    }
+
+    .container.main-content a:not(.btn):hover {
+        color: #bfdbfe;
+    }
+
+    .container.main-content .text-success { color: #34d399 !important; }
+    .container.main-content .text-danger { color: #f87171 !important; }
+    .container.main-content .text-warning { color: #fbbf24 !important; }
+    .container.main-content .h4, .container.main-content h4 { color: #e8f0ff; }
+
+    .container.main-content .pagination .page-link {
+        background: rgba(24, 38, 69, 0.5);
+        border-color: rgba(116, 146, 219, 0.26);
+        color: #bfdbfe;
+    }
+
+    .container.main-content .pagination .page-item.active .page-link {
+        background: linear-gradient(90deg, #2563eb, #3b82f6);
+        border-color: transparent;
+    }
+</style>

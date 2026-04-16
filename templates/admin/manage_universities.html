@@ -1,0 +1,175 @@
+{% extends "admin/layout.html" %}
+{% set active_page = 'universities' %}
+
+{% block title %}Universities - ReportGen Admin{% endblock %}
+
+{% block admin_content %}
+<section class="dashboard-grid">
+  <div>
+    <h1 class="page-title">Manage Universities</h1>
+    <p class="page-subtitle">Create a clean university master list and merge duplicate records safely.</p>
+  </div>
+
+  <div class="stats-inline">
+    <span class="stats-chip">Total: <b id="uniCount">0</b></span>
+    <button class="btn-ghost" type="button" id="refreshBtn"><i data-lucide="refresh-cw" style="width:14px;height:14px;"></i>Refresh</button>
+  </div>
+
+  <article class="panel-card panel-body" style="display:grid;gap:12px;">
+    <h3 style="margin:0;font-size:16px;color:#0f172a;">Merge Universities</h3>
+    <div class="toolbar" style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;">
+      <input id="sourceId" class="small-input" placeholder="Source ID">
+      <input id="targetId" class="small-input" placeholder="Target ID">
+      <button class="btn-primary" type="button" id="mergeBtn">Merge</button>
+    </div>
+  </article>
+
+  <article class="panel-card panel-body table-card">
+    <div class="data-table-wrap">
+      <table class="data-table stagger-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>City</th>
+            <th>State</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="rows"><tr><td colspan="4" style="text-align:center;color:#94a3b8;">Loading universities...</td></tr></tbody>
+      </table>
+    </div>
+  </article>
+</section>
+{% endblock %}
+
+{% block page_js %}
+<script>
+  const rowsEl = document.getElementById('rows');
+  const uniCount = document.getElementById('uniCount');
+  const refreshBtn = document.getElementById('refreshBtn');
+  const mergeBtn = document.getElementById('mergeBtn');
+  const sourceInput = document.getElementById('sourceId');
+  const targetInput = document.getElementById('targetId');
+
+  const authHeaders = () => {
+    const token = window.AdminUI.getAuthToken();
+    return token ? {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    } : null;
+  };
+
+  const renderRows = (items) => {
+    uniCount.textContent = String(items.length || 0);
+    if (!items.length) {
+      rowsEl.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;">No universities found.</td></tr>';
+      return;
+    }
+
+    rowsEl.innerHTML = items.map((u) => `
+      <tr>
+        <td><strong>${u.name || '-'}</strong><br><small style="color:#94a3b8;">${u._id || '-'}</small></td>
+        <td>${u.villageCityName || '-'}</td>
+        <td>${u.state || '-'}</td>
+        <td>
+          <div class="icon-actions">
+            <button class="toggle-action edit-btn" data-id="${u._id}" data-name="${(u.name || '').replace(/"/g, '&quot;')}" title="Edit"><i data-lucide="pencil" style="width:16px;height:16px;"></i></button>
+            <button class="danger-action del-btn" data-id="${u._id}" title="Delete"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+    if (window.lucide) lucide.createIcons();
+    window.AdminUI?.staggerRows();
+    bindRowActions();
+  };
+
+  const loadUniversities = async () => {
+    rowsEl.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;">Loading universities...</td></tr>';
+    try {
+      const data = await window.AdminUI.adminApiGet('/api/admin/universities') || [];
+      renderRows(data);
+    } catch (err) {
+      console.error(err);
+      rowsEl.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#ef4444;">Failed to load universities.</td></tr>';
+    }
+  };
+
+  const updateUniversity = async (id, currentName) => {
+    const name = prompt('University name', currentName || '');
+    if (!name) return;
+    const headers = authHeaders();
+    if (!headers) return;
+
+    await fetch(`/api/admin/universities/${id}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ name: name.trim() })
+    });
+
+    await loadUniversities();
+  };
+
+  const deleteUniversity = async (id) => {
+    if (!confirm('Delete university?')) return;
+    const headers = authHeaders();
+    if (!headers) return;
+
+    await fetch(`/api/admin/universities/${id}`, {
+      method: 'DELETE',
+      headers
+    });
+
+    await loadUniversities();
+  };
+
+  const mergeUniversities = async () => {
+    const sourceId = sourceInput.value.trim();
+    const targetId = targetInput.value.trim();
+    if (!sourceId || !targetId) {
+      if (window.showToast) window.showToast('Both Source ID and Target ID are required.', 'warning');
+      return;
+    }
+
+    const headers = authHeaders();
+    if (!headers) return;
+
+    await fetch('/api/admin/universities/merge', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ sourceId, targetId })
+    });
+
+    sourceInput.value = '';
+    targetInput.value = '';
+    await loadUniversities();
+  };
+
+  const bindRowActions = () => {
+    rowsEl.querySelectorAll('.edit-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        try {
+          await updateUniversity(btn.dataset.id, btn.dataset.name || '');
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    });
+
+    rowsEl.querySelectorAll('.del-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        try {
+          await deleteUniversity(btn.dataset.id);
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    });
+  };
+
+  refreshBtn.addEventListener('click', loadUniversities);
+  mergeBtn.addEventListener('click', mergeUniversities);
+  document.addEventListener('DOMContentLoaded', loadUniversities);
+</script>
+{% endblock %}

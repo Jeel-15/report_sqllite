@@ -1,0 +1,280 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>High-Performance Tumbling Sphere</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #ffffff; /* Clean white background */
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="sphere-canvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('sphere-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height, sphereRadius, fov;
+    let particles = [];
+
+    const characters = ['+', '-', '·', '|', 'T', '1', '0'];
+
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      
+      sphereRadius = Math.min(width, height) * 0.4; 
+      fov = sphereRadius * 2.5; 
+      
+      initParticles();
+    }
+
+    function initParticles() {
+      particles = [];
+      const rings = 20; 
+      
+      for (let lat = 1; lat < rings; lat++) {
+        const phi = (lat * Math.PI) / rings; 
+        const y = sphereRadius * Math.cos(phi);
+        const ringRadius = sphereRadius * Math.sin(phi);
+
+        const pointsInRing = Math.max(1, Math.floor(60 * Math.sin(phi)));
+
+        for (let lon = 0; lon < pointsInRing; lon++) {
+          const theta = (lon * 2 * Math.PI) / pointsInRing; 
+          
+          const x = ringRadius * Math.cos(theta);
+          const z = ringRadius * Math.sin(theta);
+
+          particles.push({
+            baseX: x, 
+            baseY: y,
+            baseZ: z,
+            // Set initial character
+            char: characters[Math.floor(Math.random() * characters.length)]
+          });
+        }
+      }
+    }
+
+    // Global time tracker for rotation
+    let time = 0;
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      
+      time += 0.00015; 
+      const angleX = time * 1.5;
+      const angleY = time * 2.2; 
+      const angleZ = time * 0.8; 
+
+      const cosX = Math.cos(angleX), sinX = Math.sin(angleX);
+      const cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+      const cosZ = Math.cos(angleZ), sinZ = Math.sin(angleZ);
+
+      particles.forEach(p => {
+        // --- NEW: ICON ANIMATION LOGIC ---
+        // Every frame, there is a small chance (e.g., 2%) that the character changes.
+        // This creates that cool, continuous data-flicker effect from the video.
+        if (Math.random() < 0.02) {
+            p.char = characters[Math.floor(Math.random() * characters.length)];
+        }
+
+        // 1. Rotate around Z-axis
+        let x1 = p.baseX * cosZ - p.baseY * sinZ;
+        let y1 = p.baseY * cosZ + p.baseX * sinZ;
+        let z1 = p.baseZ;
+
+        // 2. Rotate around X-axis
+        let y2 = y1 * cosX - z1 * sinX;
+        let z2 = z1 * cosX + y1 * sinX;
+
+        // 3. Rotate around Y-axis
+        let x3 = x1 * cosY - z2 * sinY;
+        let z3 = z2 * cosY + x1 * sinY;
+
+        // Back-face culling (hides the very back completely to keep it clean)
+        if (z3 > sphereRadius * 0.1) return; 
+
+        // 3D Perspective Projection
+        const scale = fov / (fov + z3);
+        const x2d = (x3 * scale) + (width / 2);
+        const y2d = (y2 * scale) + (height / 2);
+
+        // Opacity fading (Front is dark, back is faded/lightly animated)
+        const depthRatio = (z3 + sphereRadius) / (sphereRadius * 1.1);
+        const opacity = Math.max(0.1, 1 - depthRatio);
+        
+        ctx.font = `${Math.max(10, 14 * scale)}px monospace`; 
+        ctx.fillStyle = `rgba(140, 145, 155, ${opacity})`; 
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(p.char, x2d, y2d);
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+    animate();
+  </script>
+
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lag-Free Multi-Axis Sphere</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #ffffff;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="sphere-canvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('sphere-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height, sphereRadius, fov;
+    let particles = [];
+
+    const characters = ['+', '-', '·', '|', 'T', '1', '0'];
+
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      
+      sphereRadius = Math.min(width, height) * 0.4; 
+      fov = sphereRadius * 2.5; 
+      
+      initParticles();
+    }
+
+    function initParticles() {
+      particles = [];
+      const rings = 20; // Optimized ring count for perfect performance
+      
+      for (let lat = 1; lat < rings; lat++) {
+        const phi = (lat * Math.PI) / rings; 
+        const y = sphereRadius * Math.cos(phi);
+        const ringRadius = sphereRadius * Math.sin(phi);
+
+        const pointsInRing = Math.max(1, Math.floor(55 * Math.sin(phi)));
+
+        for (let lon = 0; lon < pointsInRing; lon++) {
+          const theta = (lon * 2 * Math.PI) / pointsInRing; 
+          
+          const x = ringRadius * Math.cos(theta);
+          const z = ringRadius * Math.sin(theta);
+
+          particles.push({
+            baseX: x, 
+            baseY: y,
+            baseZ: z,
+            char: characters[Math.floor(Math.random() * characters.length)]
+          });
+        }
+      }
+    }
+
+    // Independent axes for true 3D tumbling
+    let angleX = 0;
+    let angleY = 0;
+    let angleZ = 0;
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      
+      // 1. PERFORMANCE HACK: Mutate only 15 random characters per frame instead of 1000+
+      // This gives the exact same visual flicker effect but with zero lag.
+      for (let i = 0; i < 15; i++) {
+        const randomIndex = Math.floor(Math.random() * particles.length);
+        particles[randomIndex].char = characters[Math.floor(Math.random() * characters.length)];
+      }
+
+      // 2. TRUE MULTI-AXIS ROTATION: Faster and offset speeds
+      angleX += 0.0018; 
+      angleY += 0.0028; 
+      angleZ += 0.0012; 
+
+      const cosX = Math.cos(angleX), sinX = Math.sin(angleX);
+      const cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+      const cosZ = Math.cos(angleZ), sinZ = Math.sin(angleZ);
+
+      particles.forEach(p => {
+        // Rotate around Z-axis
+        let x1 = p.baseX * cosZ - p.baseY * sinZ;
+        let y1 = p.baseY * cosZ + p.baseX * sinZ;
+        let z1 = p.baseZ;
+
+        // Rotate around X-axis
+        let y2 = y1 * cosX - z1 * sinX;
+        let z2 = z1 * cosX + y1 * sinX;
+
+        // Rotate around Y-axis
+        let x3 = x1 * cosY - z2 * sinY;
+        let z3 = z2 * cosY + x1 * sinY;
+
+        // Back-face culling: Hides the back half to keep 60 FPS
+        if (z3 > sphereRadius * 0.1) return; 
+
+        // Projection
+        const scale = fov / (fov + z3);
+        const x2d = (x3 * scale) + (width / 2);
+        const y2d = (y2 * scale) + (height / 2);
+
+        // Opacity mapping
+        const depthRatio = (z3 + sphereRadius) / (sphereRadius * 1.1);
+        const opacity = Math.max(0.1, 1 - depthRatio);
+        
+        ctx.font = `${Math.max(10, 14 * scale)}px monospace`; 
+        ctx.fillStyle = `rgba(130, 135, 145, ${opacity})`; 
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(p.char, x2d, y2d);
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+    animate();
+  </script>
+
+</body>
+</html>

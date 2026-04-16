@@ -1,0 +1,85 @@
+{% extends "admin/layout.html" %}
+{% set active_page = 'colleges' %}
+
+{% block title %}Colleges - ReportGen Admin{% endblock %}
+
+{% block admin_content %}
+<section class="dashboard-grid">
+  <div>
+    <h1 class="page-title">Manage Colleges</h1>
+    <p class="page-subtitle">Keep colleges organized under the correct universities and merge duplicates.</p>
+  </div>
+
+  <div class="stats-inline">
+    <button class="btn-ghost" type="button" onclick="load()"><i data-lucide="refresh-cw" style="width:14px;height:14px;"></i>Refresh</button>
+  </div>
+
+  <article class="panel-card panel-body" style="display:grid;gap:12px;">
+    <h3 style="margin:0;font-size:16px;color:#0f172a;">Merge Colleges</h3>
+    <div class="toolbar" style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;">
+      <input id="sourceId" class="small-input" placeholder="Source ID">
+      <input id="targetId" class="small-input" placeholder="Target ID">
+      <button class="btn-primary" type="button" onclick="merge()">Merge</button>
+    </div>
+  </article>
+
+  <article class="panel-card panel-body table-card">
+    <div class="data-table-wrap">
+      <table class="data-table stagger-table">
+        <thead><tr><th>Name</th><th>University</th><th>Actions</th></tr></thead>
+        <tbody id="rows"><tr><td colspan="3" style="text-align:center;color:#94a3b8;">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </article>
+</section>
+{% endblock %}
+
+{% block page_js %}
+<script>
+const token = localStorage.getItem('token');
+if (!token) location.href = '/login';
+const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+async function load() {
+  const res = await fetch('/api/admin/colleges', { headers });
+  const data = await res.json();
+  document.getElementById('rows').innerHTML = (data || []).map(c => `
+    <tr>
+      <td><small class="text-muted">${c._id}</small><br>${c.name}</td>
+      <td>${c.university?.name || '-'}</td>
+      <td>
+        <div class="icon-actions">
+          <button class="toggle-action" onclick='edit(${JSON.stringify(c)})' title="Edit"><i data-lucide="pencil" style="width:16px;height:16px;"></i></button>
+          <button class="danger-action" onclick='del("${c._id}")' title="Delete"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+        </div>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="3" style="text-align:center;color:#94a3b8;">No data</td></tr>';
+  if (window.lucide) lucide.createIcons();
+  window.AdminUI?.staggerRows();
+}
+
+async function edit(c) {
+  const name = prompt('College name', c.name || '');
+  if (!name) return;
+  const logo = prompt('College logo path/url', c.logo || '');
+  await fetch(`/api/admin/colleges/${c._id}`, { method: 'PUT', headers, body: JSON.stringify({ name, logo: logo || '' }) });
+  load();
+}
+
+async function del(id) {
+  if (!confirm('Delete college?')) return;
+  await fetch(`/api/admin/colleges/${id}`, { method: 'DELETE', headers });
+  load();
+}
+
+async function merge() {
+  const sourceId = document.getElementById('sourceId').value.trim();
+  const targetId = document.getElementById('targetId').value.trim();
+  if (!sourceId || !targetId) return;
+  await fetch('/api/admin/colleges/merge', { method: 'POST', headers, body: JSON.stringify({ sourceId, targetId }) });
+  load();
+}
+
+document.addEventListener('DOMContentLoaded', load);
+</script>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "admin/layout.html" %}
+{% set active_page = 'payments' %}
+
+{% block title %}Payments - ReportGen Admin{% endblock %}
+
+{% block admin_content %}
+<section class="dashboard-grid">
+  <div>
+    <h1 class="page-title">Payments</h1>
+    <p class="page-subtitle">Track student transactions, payment status, and revenue timeline.</p>
+  </div>
+
+  <div class="stats-inline" style="gap:10px;">
+    <input id="from" type="date" class="small-input" style="width:170px;">
+    <input id="to" type="date" class="small-input" style="width:170px;">
+    <button class="btn-primary" type="button" onclick="load()">Filter</button>
+  </div>
+
+  <article class="panel-card panel-body table-card">
+    <div class="data-table-wrap">
+      <table class="data-table stagger-table">
+        <thead><tr><th>User</th><th>Service</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody id="rows"><tr><td colspan="5" style="text-align:center;color:#94a3b8;">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </article>
+</section>
+{% endblock %}
+
+{% block page_js %}
+<script>
+const token = localStorage.getItem('token');
+if (!token) location.href = '/login';
+
+async function load() {
+  const from = document.getElementById('from').value;
+  const to = document.getElementById('to').value;
+  const qs = new URLSearchParams();
+  if (from) qs.set('from', from);
+  if (to) qs.set('to', to);
+  const res = await fetch('/api/admin/payments' + (qs.toString() ? `?${qs.toString()}` : ''), {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data = await res.json();
+  document.getElementById('rows').innerHTML = (data || []).map(p => `
+    <tr>
+      <td>${p.user?.name || '-'}<br><small>${p.user?.email || ''}</small></td>
+      <td>${p.service?.name || p.service || '-'}</td>
+      <td>₹${p.totalAmount || 0}</td>
+      <td><span class="status-badge ${String(p.status || '').toLowerCase() === 'completed' ? 'status-generated' : 'status-draft'}">${p.status || '-'}</span></td>
+      <td>${p.createdAt ? new Date(p.createdAt).toLocaleString() : '-'}</td>
+    </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:#94a3b8;">No payments</td></tr>';
+
+  if (window.AdminUI) {
+    window.AdminUI.staggerRows();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', load);
+</script>
+{% endblock %}

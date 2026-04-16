@@ -1,0 +1,1513 @@
+{% extends "base.html" %}
+
+{% block title %}{% if admin_readonly %}Report Viewer - Anti-Report{% else %}Report Editor - Anti-Report{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background:
+            radial-gradient(1100px 420px at -10% -20%, rgba(59, 130, 246, 0.16), transparent 62%),
+            radial-gradient(980px 360px at 110% -16%, rgba(147, 197, 253, 0.25), transparent 58%),
+            linear-gradient(180deg, #f6f9ff 0%, #eef4ff 100%);
+        color: #0f172a;
+    }
+
+    .report-editor-header {
+        margin-bottom: 1rem;
+        gap: 0.75rem 0;
+    }
+
+    #pageTitle {
+        font-size: clamp(1.7rem, 4vw, 3rem);
+        line-height: 1.1;
+        margin-bottom: 0;
+        color: #0f172a;
+        font-family: 'Playfair Display', serif;
+    }
+
+    .container.main-content h2,
+    .container.main-content .text-muted {
+        color: #0f172a !important;
+    }
+
+    .container.main-content .text-muted {
+        color: #64748b !important;
+        opacity: 1;
+    }
+
+    .report-editor-actions {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 0.55rem;
+        flex-wrap: wrap;
+    }
+
+    .report-editor-actions .badge {
+        border-radius: 999px;
+        padding: 0.45rem 0.72rem;
+        font-size: 0.75rem;
+        letter-spacing: 0.02em;
+    }
+
+    .report-editor-actions .btn {
+        border-radius: 10px;
+        min-height: 38px;
+        font-weight: 600;
+    }
+
+    .report-editor-actions .btn-outline-secondary {
+        border-color: #dbe7ff;
+        color: #64748b;
+        background: #f8fbff;
+    }
+
+    .report-editor-actions .btn-outline-secondary:hover {
+        color: #1e3a8a;
+        border-color: #bfdbfe;
+        background: #eff6ff;
+    }
+
+    .report-editor-actions .btn-success {
+        border: 0;
+        background: linear-gradient(90deg, #059669, #10b981);
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.28);
+    }
+
+    .preview-toolbar {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.75rem;
+    }
+
+    .preview-toolbar .btn {
+        border-radius: 10px;
+        min-height: 36px;
+        font-weight: 600;
+    }
+
+    .report-workspace {
+        border: 1px solid #dbe7ff;
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: 0 12px 30px rgba(37, 99, 235, 0.08);
+        overflow: hidden;
+    }
+
+    .report-workspace-head {
+        padding: 0.8rem 0.8rem 0;
+        background: linear-gradient(180deg, #f9fcff, #f2f7ff);
+        border-bottom: 1px solid #dbe7ff;
+    }
+
+    #reportTabs {
+        gap: 0.5rem;
+        margin-bottom: 0.75rem !important;
+    }
+
+    #reportTabs .nav-item {
+        flex: 1 1 0;
+    }
+
+    #reportTabs .nav-link {
+        width: 100%;
+        border: 1px solid #dbe7ff;
+        border-radius: 10px;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 0.92rem;
+        text-align: center;
+        padding: 0.64rem 0.85rem;
+        background: #f8fbff;
+    }
+
+    #reportTabs .nav-link:hover {
+        color: #1e3a8a;
+        background: #eff6ff;
+        border-color: #bfdbfe;
+    }
+
+    #reportTabs .nav-link.active {
+        color: #fff;
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        border-color: transparent;
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+    }
+
+    .report-workspace-body {
+        padding: 1rem;
+        background: #f8fbff;
+    }
+
+    .report-workspace-body .card {
+        border: 1px solid #dbe7ff !important;
+        background: #ffffff;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.07);
+        border-radius: 14px;
+    }
+
+    .report-workspace-body .card-title,
+    .report-workspace-body h5,
+    .report-workspace-body h6 {
+        color: #0f172a;
+        font-family: 'Playfair Display', serif;
+    }
+
+    .report-workspace-body .form-label {
+        color: #64748b;
+        font-weight: 700;
+        font-size: 0.82rem;
+    }
+
+    .report-workspace-body .form-control,
+    .report-workspace-body .form-select {
+        background: #f8fbff;
+        border: 1.5px solid #dbe7ff;
+        color: #0f172a;
+        border-radius: 10px;
+    }
+
+    .report-workspace-body .form-control:focus,
+    .report-workspace-body .form-select:focus {
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.2);
+        background: #ffffff;
+    }
+
+    .report-workspace-body .form-check-label {
+        color: #475569;
+    }
+
+    .report-workspace-body .border {
+        border-color: #dbe7ff !important;
+    }
+
+    .report-workspace-body .bg-light-subtle {
+        background: #f8fbff !important;
+    }
+
+    .report-workspace-body .bg-white {
+        background: #ffffff !important;
+    }
+
+    .report-workspace-body .btn-primary {
+        background: linear-gradient(90deg, #2563eb, #3b82f6);
+        border: 0;
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+    }
+
+    .report-workspace-body .btn-outline-primary {
+        border-color: #bfdbfe;
+        color: #1d4ed8;
+        background: #eff6ff;
+    }
+
+    .report-workspace-body .btn-outline-secondary {
+        border-color: #dbe7ff;
+        color: #64748b;
+        background: #f8fbff;
+    }
+
+    .report-workspace-body .btn-success {
+        background: linear-gradient(90deg, #059669, #10b981);
+        border: 0;
+    }
+
+    .report-workspace-body .btn-outline-danger {
+        border-color: rgba(239, 68, 68, 0.25);
+        color: #dc2626;
+        background: #fef2f2;
+    }
+
+    .report-workspace-body .text-muted {
+        color: #64748b !important;
+    }
+
+    .report-workspace-body .card-header {
+        background: linear-gradient(180deg, #f9fcff, #f2f7ff);
+        border-bottom: 1px solid #dbe7ff;
+        color: #0f172a;
+    }
+
+    /* Report timeline - dark theme */
+    #reportTimeline {
+        background: #ffffff !important;
+        border-color: #dbe7ff !important;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.07);
+    }
+
+    #reportTimeline .tl-dot {
+        border-color: #dbe7ff !important;
+        background: #ffffff !important;
+        color: #94a3b8 !important;
+    }
+
+    #reportTimeline div[style*="background:#e8e4f0"] {
+        background: #dbe7ff !important;
+    }
+
+    #timelineFill {
+        background: linear-gradient(90deg, #1d4ed8, #3b82f6) !important;
+    }
+
+    #reportTimeline div[style*="color:#9b97b0"] {
+        color: #64748b !important;
+    }
+
+    /* PDF preview loading */
+    #pdfLoadingOverlay {
+        background: #f8fbff !important;
+    }
+
+    #pdfLoadingOverlay div[style*="color: #1a1a2e"] {
+        color: #0f172a !important;
+    }
+
+    #pdfLoadingOverlay div[style*="color: #6b6783"] {
+        color: #64748b !important;
+    }
+
+    #pdfLoadingOverlay div[style*="border: 3px"] {
+        border-color: #dbe7ff !important;
+        border-top-color: #2563eb !important;
+    }
+
+    #pdfLoadingOverlay div[style*="background: #e8e4f0"] {
+        background: #dbe7ff !important;
+    }
+
+    #pdfProgressBar {
+        background: linear-gradient(90deg, #1d4ed8, #3b82f6) !important;
+    }
+
+    @media (max-width: 768px) {
+        .report-editor-actions {
+            justify-content: flex-start;
+            margin-top: 0.6rem;
+        }
+
+        .report-workspace-head {
+            padding: 0.7rem 0.7rem 0;
+        }
+
+        .report-workspace-body {
+            padding: 0.7rem;
+        }
+
+        .preview-toolbar {
+            justify-content: stretch;
+        }
+
+        .preview-toolbar .btn {
+            width: 100%;
+        }
+
+        #reportTabs {
+            gap: 0.45rem;
+        }
+
+        #reportTabs .nav-item {
+            flex: 1 1 calc(50% - 0.45rem);
+        }
+
+        #reportTabs .nav-link {
+            font-size: 0.88rem;
+            padding: 0.55rem 0.55rem;
+        }
+
+        #previewViewport {
+            height: calc(100vh - 220px);
+            min-height: 430px;
+        }
+
+        #reportTimeline {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 12px 12px !important;
+        }
+
+        #reportTimeline > div {
+            min-width: 560px;
+        }
+
+        .tl-step {
+            min-width: 92px;
+        }
+
+        .images-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .report-editor-header {
+            margin-bottom: 0.75rem;
+        }
+
+        .report-editor-actions {
+            gap: 0.4rem;
+        }
+
+        .report-editor-actions .btn {
+            width: 100%;
+        }
+
+        #previewViewport {
+            min-height: 360px;
+            height: calc(100vh - 190px);
+        }
+
+        #reportTimeline > div {
+            min-width: 520px;
+        }
+
+        #logoSlots .col-md-6 {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-3 align-items-center report-editor-header">
+    <div class="col-md-6">
+        <h2 id="pageTitle">Loading Report...</h2>
+    </div>
+    <div class="col-md-6 report-editor-actions">
+        <span id="statusBadge" class="badge bg-secondary">Loading</span>
+        <button class="btn btn-outline-secondary" onclick="window.history.back()">Back</button>
+        <button class="btn btn-success" id="downloadPdfBtn" onclick="downloadPdf()">
+            <i class="bi bi-file-pdf"></i> Download PDF
+        </button>
+    </div>
+</div>
+
+<div id="reportTimeline" style="
+    background:#fff;border-radius:12px;border:1px solid #e8e4f0;
+    padding:16px 20px;margin-bottom:20px;
+">
+    <div style="display:flex;align-items:center;justify-content:space-between;
+        position:relative;">
+
+        <div style="position:absolute;top:14px;left:14px;right:14px;
+            height:2px;background:#e8e4f0;z-index:0;"></div>
+        <div id="timelineFill" style="position:absolute;top:14px;left:14px;
+            height:2px;background:linear-gradient(90deg,#7c3aed,#e84393);
+            z-index:1;transition:width 0.5s ease;width:0%;"></div>
+
+        <div class="tl-step" data-step="pending">
+            <div class="tl-dot" style="width:28px;height:28px;border-radius:50%;
+                border:2px solid #e8e4f0;background:#fff;display:flex;
+                align-items:center;justify-content:center;font-size:11px;
+                color:#9b97b0;position:relative;z-index:2;margin:0 auto 6px;">1</div>
+            <div style="font-size:11px;color:#9b97b0;text-align:center;
+                white-space:nowrap;">Submitted</div>
+        </div>
+        <div class="tl-step" data-step="generating">
+            <div class="tl-dot" style="width:28px;height:28px;border-radius:50%;
+                border:2px solid #e8e4f0;background:#fff;display:flex;
+                align-items:center;justify-content:center;font-size:11px;
+                color:#9b97b0;position:relative;z-index:2;margin:0 auto 6px;">2</div>
+            <div style="font-size:11px;color:#9b97b0;text-align:center;
+                white-space:nowrap;">Generating</div>
+        </div>
+        <div class="tl-step" data-step="generated">
+            <div class="tl-dot" style="width:28px;height:28px;border-radius:50%;
+                border:2px solid #e8e4f0;background:#fff;display:flex;
+                align-items:center;justify-content:center;font-size:11px;
+                color:#9b97b0;position:relative;z-index:2;margin:0 auto 6px;">3</div>
+            <div style="font-size:11px;color:#9b97b0;text-align:center;
+                white-space:nowrap;">Generated</div>
+        </div>
+        <div class="tl-step" data-step="edited">
+            <div class="tl-dot" style="width:28px;height:28px;border-radius:50%;
+                border:2px solid #e8e4f0;background:#fff;display:flex;
+                align-items:center;justify-content:center;font-size:11px;
+                color:#9b97b0;position:relative;z-index:2;margin:0 auto 6px;">4</div>
+            <div style="font-size:11px;color:#9b97b0;text-align:center;
+                white-space:nowrap;">Edited</div>
+        </div>
+        <div class="tl-step" data-step="downloaded">
+            <div class="tl-dot" style="width:28px;height:28px;border-radius:50%;
+                border:2px solid #e8e4f0;background:#fff;display:flex;
+                align-items:center;justify-content:center;font-size:11px;
+                color:#9b97b0;position:relative;z-index:2;margin:0 auto 6px;">5</div>
+            <div style="font-size:11px;color:#9b97b0;text-align:center;
+                white-space:nowrap;">Downloaded</div>
+        </div>
+    </div>
+</div>
+
+<section class="report-workspace">
+    <div class="report-workspace-head">
+        <ul class="nav nav-pills nav-fill" id="reportTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="editor-tab" data-bs-toggle="tab" data-bs-target="#editor-pane" type="button" role="tab" aria-controls="editor-pane" aria-selected="true">
+                    <span class="me-1">1.</span><i class="bi bi-pencil-square me-1"></i>Editor
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="preview-tab" data-bs-toggle="tab" data-bs-target="#preview-pane" type="button" role="tab" aria-controls="preview-pane" aria-selected="false">
+                    <span class="me-1">2.</span><i class="bi bi-eye me-1"></i>Live Preview
+                </button>
+            </li>
+            <li class="nav-item" id="imageTabNavItem" style="display:none;" role="presentation">
+                <button class="nav-link" id="images-tab-btn" data-bs-toggle="tab" data-bs-target="#imagesPanel" type="button" role="tab" aria-controls="imagesPanel" aria-selected="false">
+                    <span class="me-1">3.</span><i class="bi bi-camera me-1"></i>Images
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="report-workspace-body">
+<div class="tab-content" id="reportTabsContent">
+    <!-- Editor Pane -->
+    <div class="tab-pane fade show active" id="editor-pane" role="tabpanel" aria-labelledby="editor-tab">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">Edit Sections</h5>
+                    <button class="btn btn-primary btn-sm" onclick="saveEdits()" id="saveBtn">
+                        <i class="bi bi-save"></i> Save Changes
+                    </button>
+                </div>
+                <div class="border rounded p-3 mb-4 bg-light-subtle">
+                    <h6 class="mb-3">Cover Logos</h6>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label">Logo Count</label>
+                            <select id="logoCount" class="form-select">
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                            </select>
+                        </div>
+                        <div class="col-md-9">
+                            <div id="logoSlots" class="row g-2"></div>
+                        </div>
+                    </div>
+                    <small class="text-muted d-block mt-2">Tip: If no custom logos uploaded, college and industry logos are used automatically.</small>
+                </div>
+                <div class="border rounded p-3 mb-4 bg-light-subtle">
+                    <h6 class="mb-3">Header & Footer</h6>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="showHeader">
+                                <label class="form-check-label" for="showHeader">Show Header</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="showFooter">
+                                <label class="form-check-label" for="showFooter">Show Footer</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Footer Text</label>
+                            <input type="text" class="form-control" id="footerText">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Header Left</label>
+                            <input type="text" class="form-control" id="headerLeft">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Header Right</label>
+                            <input type="text" class="form-control" id="headerRight">
+                        </div>
+                    </div>
+                </div>
+                <!-- Dynamic Editor Sections -->
+                <div id="editorSections">
+                    <div class="text-center text-muted">Loading content...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Preview Pane -->
+        <div class="tab-pane fade" id="preview-pane" role="tabpanel">
+            <div class="card shadow-sm">
+                <div class="card-body" style="position: relative;">
+                    <div class="preview-toolbar">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="openPdfBtn">
+                            <i class="bi bi-box-arrow-up-right"></i> Open PDF
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="refreshPdfPreview()">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh Preview
+                        </button>
+                    </div>
+
+                    <!-- Loading overlay - shown while PDF is generating -->
+                    <div id="pdfLoadingOverlay" style="
+                        position: absolute;
+                        inset: 0;
+                        background: #f8f7ff;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 16px;
+                        z-index: 10;
+                        border-radius: inherit;
+                    ">
+                        <!-- Spinner -->
+                        <div style="
+                            width: 48px;
+                            height: 48px;
+                            border-radius: 50%;
+                            border: 3px solid #e8e4f0;
+                            border-top-color: #7c3aed;
+                            animation: pdfSpin 0.9s linear infinite;
+                        "></div>
+
+                        <!-- Text -->
+                        <div style="text-align: center;">
+                            <div style="
+                                font-family: 'DM Sans', sans-serif;
+                                font-size: 15px;
+                                font-weight: 500;
+                                color: #1a1a2e;
+                                margin-bottom: 4px;
+                            ">Generating PDF Preview...</div>
+                            <div style="
+                                font-size: 12px;
+                                color: #6b6783;
+                            ">This may take 5-15 seconds</div>
+                        </div>
+
+                        <!-- Animated progress bar -->
+                        <div style="
+                            width: 200px;
+                            height: 3px;
+                            background: #e8e4f0;
+                            border-radius: 4px;
+                            overflow: hidden;
+                        ">
+                            <div id="pdfProgressBar" style="
+                                height: 100%;
+                                width: 0%;
+                                background: linear-gradient(90deg, #7c3aed, #e84393);
+                                border-radius: 4px;
+                                transition: width 0.3s ease;
+                            "></div>
+                        </div>
+
+                    </div>
+                    <!-- End loading overlay -->
+
+                    <iframe id="pdfPreviewFrame" src="" width="100%"
+                                        height="800" style="border:none; display:none;"></iframe>
+                </div>
+            </div>
+        </div>
+    <div class="tab-pane fade" id="imagesPanel">
+        <div id="imageManagerContainer" class="p-3">
+            <p class="text-muted">Loading image manager...</p>
+        </div>
+    </div>
+</div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const isAdminReadonly = {{ 'true' if admin_readonly else 'false' }};
+    const token = localStorage.getItem('token');
+    const authHeaders = (extra = {}) => ({
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        ...extra
+    });
+    const jsonHeaders = () => authHeaders({ 'Content-Type': 'application/json' });
+
+    const pathParts = window.location.pathname.split('/');
+    const reportId = pathParts[pathParts.length - 1];
+    
+    let reportData = null;
+    let editableContent = {}; // Stores live edits
+    let logoFileNames = {};
+    let sectionImages = {};
+    let imagesEnabled = false;
+
+    const applyAdminReadonlyMode = () => {
+        if (!isAdminReadonly) return;
+
+        const editorTab = document.getElementById('editor-tab');
+        const editorPane = document.getElementById('editor-pane');
+        const previewTab = document.getElementById('preview-tab');
+        const previewPane = document.getElementById('preview-pane');
+        const imageTabNavItem = document.getElementById('imageTabNavItem');
+        const saveBtn = document.getElementById('saveBtn');
+
+        if (editorTab && editorTab.parentElement) {
+            editorTab.parentElement.style.display = 'none';
+        }
+        if (editorPane) {
+            editorPane.classList.remove('show', 'active');
+            editorPane.style.display = 'none';
+        }
+        if (imageTabNavItem) {
+            imageTabNavItem.style.display = 'none';
+        }
+        if (saveBtn) {
+            saveBtn.style.display = 'none';
+        }
+        if (previewTab) {
+            previewTab.classList.add('active');
+            previewTab.setAttribute('aria-selected', 'true');
+            previewTab.innerHTML = '<i class="bi bi-eye me-1"></i>Report Preview';
+        }
+        if (previewPane) {
+            previewPane.classList.add('show', 'active');
+        }
+    };
+
+    const normalizeEditorText = (value) => {
+        let text = value == null ? '' : String(value);
+        text = text.replace(/\r\n?/g, '\n');
+
+        // Decode escaped HTML once/twice to handle webhook-escaped payloads.
+        for (let i = 0; i < 2; i++) {
+            const ta = document.createElement('textarea');
+            ta.innerHTML = text;
+            const decoded = ta.value;
+            if (decoded === text) break;
+            text = decoded;
+        }
+
+        text = text.replace(/<\s*br\s*\/?\s*>/gi, '\n');
+        text = text.replace(/<\s*\/\s*p\s*>/gi, '\n\n');
+        text = text.replace(/<\s*p\b[^>]*>/gi, '');
+        text = text.replace(/<\s*\/?\s*div\b[^>]*>/gi, '\n');
+        text = text.replace(/<\s*\/?\s*li\b[^>]*>/gi, '\n');
+        text = text.replace(/<[^>]+>/g, '');
+        text = text.replace(/\n{3,}/g, '\n\n');
+        return text.trim();
+    };
+
+    const sanitizeEditableContent = (content) => {
+        const out = {};
+        Object.entries(content || {}).forEach(([key, val]) => {
+            if (String(key).startsWith('__')) {
+                out[key] = val;
+            } else {
+                out[key] = normalizeEditorText(val);
+            }
+        });
+        return out;
+    };
+
+    const getLayoutSettings = (content = {}, report = null) => {
+        const raw = content.__layout;
+        const defaults = {
+            showHeader: true,
+            showFooter: true,
+            headerLeft: report?.user?.name || 'Internship Report',
+            headerRight: report?.projectTitle || report?.major?.name || 'Project Report',
+            footerText: 'Prepared as part of internship academic submission',
+        };
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return defaults;
+        return {
+            showHeader: raw.showHeader !== false,
+            showFooter: raw.showFooter !== false,
+            headerLeft: typeof raw.headerLeft === 'string' ? raw.headerLeft : defaults.headerLeft,
+            headerRight: typeof raw.headerRight === 'string' ? raw.headerRight : defaults.headerRight,
+            footerText: typeof raw.footerText === 'string' ? raw.footerText : defaults.footerText,
+        };
+    };
+
+    const writeLayoutSettings = (next) => {
+        editableContent = {
+            ...editableContent,
+            __layout: {
+                showHeader: next.showHeader !== false,
+                showFooter: next.showFooter !== false,
+                headerLeft: next.headerLeft || '',
+                headerRight: next.headerRight || '',
+                footerText: next.footerText || '',
+            }
+        };
+    };
+
+    const renderLayoutControls = () => {
+        const l = getLayoutSettings(editableContent, reportData);
+        const showHeader = document.getElementById('showHeader');
+        const showFooter = document.getElementById('showFooter');
+        const headerLeft = document.getElementById('headerLeft');
+        const headerRight = document.getElementById('headerRight');
+        const footerText = document.getElementById('footerText');
+
+        if (!showHeader || !showFooter || !headerLeft || !headerRight || !footerText) return;
+
+        showHeader.checked = l.showHeader;
+        showFooter.checked = l.showFooter;
+        headerLeft.value = l.headerLeft || '';
+        headerRight.value = l.headerRight || '';
+        footerText.value = l.footerText || '';
+
+        const onUpdate = () => {
+            writeLayoutSettings({
+                showHeader: showHeader.checked,
+                showFooter: showFooter.checked,
+                headerLeft: headerLeft.value,
+                headerRight: headerRight.value,
+                footerText: footerText.value,
+            });
+        };
+
+        [showHeader, showFooter, headerLeft, headerRight, footerText].forEach(el => {
+            if (!el.dataset.bound) {
+                el.addEventListener('change', onUpdate);
+                el.addEventListener('input', onUpdate);
+                el.dataset.bound = '1';
+            }
+        });
+    };
+
+    const getCoverSettings = (content = {}) => {
+        const raw = content.__cover;
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+            return { logoCount: 2, logos: [] };
+        }
+        const parsedCount = Number(raw.logoCount);
+        const logoCount = Number.isFinite(parsedCount) ? Math.max(0, Math.min(4, parsedCount)) : 2;
+        const logos = Array.isArray(raw.logos)
+            ? raw.logos.filter(v => typeof v === 'string' && v.trim())
+            : [];
+        return { logoCount, logos };
+    };
+
+    function updateTimeline(status) {
+        const steps = ['pending','generating','generated','edited','downloaded'];
+        const statusMap = {
+            pending:0, generating:1, generated:2, edited:3, final:4, downloaded:4
+        };
+        const currentIdx = statusMap[status] ?? 0;
+        const pct = currentIdx === 0 ? 0 : (currentIdx / (steps.length - 1)) * 100;
+
+        const fill = document.getElementById('timelineFill');
+        if (fill) fill.style.width = pct + '%';
+
+        document.querySelectorAll('.tl-step').forEach((step, idx) => {
+            const dot = step.querySelector('.tl-dot');
+            const label = step.querySelector('div:last-child');
+            if (!dot || !label) return;
+
+            if (idx < currentIdx) {
+                dot.style.background = '#2563eb';
+                dot.style.borderColor = '#2563eb';
+                dot.style.color = '#fff';
+                dot.textContent = '\u2713';
+                label.style.color = '#1d4ed8';
+            } else if (idx === currentIdx) {
+                dot.style.background = 'linear-gradient(135deg,#1d4ed8,#3b82f6)';
+                dot.style.borderColor = '#2563eb';
+                dot.style.color = '#fff';
+                dot.style.boxShadow = '0 0 0 4px rgba(37,99,235,0.18)';
+                label.style.color = '#1d4ed8';
+                label.style.fontWeight = '600';
+            }
+        });
+    }
+
+    function celebrateIfNew(reportIdValue, status) {
+        const key = 'celebrated_' + reportIdValue;
+        if ((status === 'generated') && !localStorage.getItem(key)) {
+            localStorage.setItem(key, '1');
+            showToast('Your report is ready. You can review, edit, or download the PDF.',
+                'success', 5000);
+        }
+    }
+
+    const writeCoverSettings = (next) => {
+        editableContent = {
+            ...editableContent,
+            __cover: {
+                logoCount: Math.max(0, Math.min(4, Number(next.logoCount) || 0)),
+                logos: Array.isArray(next.logos) ? next.logos : [],
+            }
+        };
+    };
+
+    const updateLogoCount = (value) => {
+        const current = getCoverSettings(editableContent);
+        const nextCount = Math.max(0, Math.min(4, Number(value) || 0));
+        writeCoverSettings({ logoCount: nextCount, logos: current.logos.slice(0, nextCount) });
+        renderLogoControls();
+    };
+
+    const uploadLogoAt = (index, file) => {
+        if (!file) return;
+        logoFileNames[index] = file.name;
+        const reader = new FileReader();
+        reader.onload = () => {
+            const current = getCoverSettings(editableContent);
+            const logos = [...current.logos];
+            logos[index] = typeof reader.result === 'string' ? reader.result : '';
+            writeCoverSettings({ logoCount: current.logoCount, logos });
+            renderLogoControls();
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const removeLogoAt = (index) => {
+        const current = getCoverSettings(editableContent);
+        const logos = [...current.logos];
+        logos[index] = '';
+        delete logoFileNames[index];
+        writeCoverSettings({ logoCount: current.logoCount, logos });
+        renderLogoControls();
+    };
+
+    const renderLogoControls = () => {
+        const { logoCount, logos } = getCoverSettings(editableContent);
+        const logoCountSelect = document.getElementById('logoCount');
+        const slots = document.getElementById('logoSlots');
+        if (!logoCountSelect || !slots) return;
+
+        logoCountSelect.value = String(logoCount);
+        slots.innerHTML = '';
+
+        for (let i = 0; i < logoCount; i++) {
+            const hasLogo = !!logos[i];
+            const fileName = logoFileNames[i] || (hasLogo ? `uploaded_logo_${i + 1}.png` : 'No file selected');
+            const col = document.createElement('div');
+            col.className = 'col-md-6';
+            col.innerHTML = `
+                <div class="border rounded p-2 bg-white">
+                    <div class="small mb-2">Logo ${i + 1}</div>
+                    <input type="file" class="form-control form-control-sm logo-input" data-index="${i}" accept="image/*">
+                    <div class="mt-2 d-flex justify-content-between align-items-center">
+                        <div class="text-truncate ${hasLogo ? 'text-success fw-semibold bg-success-subtle border border-success-subtle rounded px-2 py-1' : 'text-muted'}" style="max-width: 70%;" title="${fileName}">
+                            ${hasLogo ? '<i class="bi bi-check-circle-fill me-1"></i>' : ''}${fileName}
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger logo-remove" data-index="${i}">Remove</button>
+                    </div>
+                </div>
+            `;
+            slots.appendChild(col);
+        }
+
+        slots.querySelectorAll('.logo-input').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const idx = Number(e.target.getAttribute('data-index'));
+                const file = e.target.files && e.target.files[0];
+                uploadLogoAt(idx, file);
+            });
+        });
+
+        slots.querySelectorAll('.logo-remove').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = Number(e.target.getAttribute('data-index'));
+                removeLogoAt(idx);
+            });
+        });
+    };
+
+    const openPreviewInNewTab = async () => {
+        if (!reportData) return;
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            showToast('Please sign in again.', 'error');
+            return;
+        }
+
+        const url = `/api/reports/${reportId}/pdf?inline=1&token=${encodeURIComponent(token)}`;
+        window.location.assign(url);
+    };
+
+    const isMobilePreview = () => {
+        try {
+            return window.matchMedia('(max-width: 768px)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        } catch (err) {
+            return false;
+        }
+    };
+
+    const renderMobilePreviewFallback = () => {
+        const overlay = document.getElementById('pdfLoadingOverlay');
+        const previewFrame = document.getElementById('pdfPreviewFrame');
+        if (!overlay || !previewFrame) return;
+
+        const container = overlay.parentElement;
+        if (container) {
+            container.style.minHeight = '420px';
+        }
+
+        previewFrame.style.display = 'none';
+        overlay.style.display = 'flex';
+        overlay.style.position = 'relative';
+        overlay.style.inset = 'auto';
+        overlay.style.minHeight = '340px';
+        overlay.style.marginTop = '8px';
+        overlay.style.padding = '18px 14px';
+        overlay.style.overflow = 'visible';
+        overlay.style.borderRadius = '12px';
+        overlay.innerHTML = `
+            <div style="text-align:center; width:100%; max-width: 360px; margin:0 auto; padding: 10px 8px;">
+                <div style="font-size: 28px; margin-bottom: 10px;">📄</div>
+                <div style="font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; color: #1a1a2e; margin-bottom: 6px;">
+                    Mobile preview is limited
+                </div>
+                <div style="font-size: 13px; color: #6b6783; line-height: 1.5; margin-bottom: 14px;">
+                    This phone browser cannot reliably display the PDF inside the preview pane.
+                    Use Open PDF or Download PDF instead.
+                </div>
+                <div style="display:flex; gap:10px; flex-direction:column; width:100%;">
+                    <button type="button" onclick="openPreviewInNewTab()" style="width:100%; padding:11px 16px;border-radius:10px;border:0;background:linear-gradient(90deg,#2563eb,#3b82f6);color:#fff;font-weight:600;">
+                        Open PDF
+                    </button>
+                    <button type="button" onclick="downloadPdf()" style="width:100%; padding:11px 16px;border-radius:10px;border:1px solid #dbe7ff;background:#fff;color:#1d4ed8;font-weight:600;">
+                        Download PDF
+                    </button>
+                </div>
+            </div>
+        `;
+    };
+
+    function initImageManager(reportData, sectionsArray) {
+        imagesEnabled = reportData.imagesEnabled === true;
+        sectionImages = reportData.sectionImages || {};
+
+        const navItem = document.getElementById('imageTabNavItem');
+        if (navItem) {
+            navItem.style.display = imagesEnabled ? '' : 'none';
+
+            // If Images is currently active but feature is disabled, switch back to Editor.
+            if (!imagesEnabled) {
+                const imagesBtn = document.getElementById('images-tab-btn');
+                if (imagesBtn && imagesBtn.classList.contains('active')) {
+                    const editorBtn = document.getElementById('editor-tab');
+                    if (editorBtn && window.bootstrap?.Tab) {
+                        window.bootstrap.Tab.getOrCreateInstance(editorBtn).show();
+                    }
+                }
+            }
+        }
+
+        renderImageManager(sectionsArray);
+    }
+
+    function renderImageManager(sectionsArray) {
+        const container = document.getElementById('imageManagerContainer');
+        if (!container) return;
+
+        if (!imagesEnabled) {
+            container.innerHTML = '<p class="text-muted">Images are not enabled for this report type.</p>';
+            return;
+        }
+
+        container.innerHTML = `<div class="images-grid">${sectionsArray.map(([key, title]) => `
+            <div class="card">
+                <div class="card-header fw-bold">${title}</div>
+                <div class="card-body">
+                    <div id="imgList_${key}" class="d-flex flex-wrap gap-2 mb-3">
+                        ${renderImageThumbnails(key, sectionImages[key] || [])}
+                    </div>
+                    <label class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-upload me-1"></i>Upload Image
+                        <input type="file" accept="image/jpeg,image/png,image/gif,image/webp"
+                               style="display:none" onchange="uploadSectionImage('${key}', this)">
+                    </label>
+                </div>
+            </div>
+        `).join('')}</div>`;
+    }
+
+    function renderImageThumbnails(sectionKey, images) {
+        if (!images || !images.length) return '<p class="text-muted small">No images uploaded yet.</p>';
+        return images.map(img => `
+            <div class="border rounded p-2" style="width:210px;">
+                <img src="${img.url}" style="width:100%;height:120px;object-fit:cover;border-radius:4px;"
+                     onerror="this.src='/static/img/placeholder.png'">
+                <select class="form-select form-select-sm mt-1"
+                        onchange="updateSectionImage('${sectionKey}','${img.filename}','position',this.value)">
+                    <option value="top" ${img.position==='top' ?'selected':''}>Top of section</option>
+                    <option value="middle" ${img.position==='middle'?'selected':''}>Middle of section</option>
+                    <option value="bottom" ${img.position==='bottom'?'selected':''}>Bottom of section</option>
+                </select>
+                <input type="text" class="form-control form-control-sm mt-1"
+                       placeholder="Caption (optional)" value="${img.caption||''}"
+                       onchange="updateSectionImage('${sectionKey}','${img.filename}','caption',this.value)">
+                <div class="d-flex align-items-center gap-1 mt-1">
+                    <small>Width:</small>
+                          <input type="range" class="form-range" min="10" max="100"
+                           value="${img.widthPercent||100}"
+                           oninput="this.nextElementSibling.textContent=this.value+'%'"
+                           onchange="updateSectionImage('${sectionKey}','${img.filename}','widthPercent',this.value)">
+                    <small>${img.widthPercent||100}%</small>
+                </div>
+                <button class="btn btn-outline-danger btn-sm w-100 mt-1"
+                        onclick="deleteSectionImage('${sectionKey}','${img.filename}')"><i class="bi bi-trash me-1"></i>Remove</button>
+            </div>
+        `).join('');
+    }
+
+    async function uploadSectionImage(sectionKey, input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const allowedTypes = ['image/jpeg','image/png','image/gif','image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            showToast('Invalid file type. Use JPG, PNG, GIF, or WEBP.', 'warning');
+            input.value = '';
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const res = await fetch(`/api/reports/${reportId}/images/${sectionKey}`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: authHeaders(),
+                body: formData
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                showToast(data.message || 'Upload failed', 'error');
+                return;
+            }
+
+            if (!sectionImages[sectionKey]) sectionImages[sectionKey] = [];
+            sectionImages[sectionKey].push(data.image);
+            document.getElementById(`imgList_${sectionKey}`).innerHTML =
+                renderImageThumbnails(sectionKey, sectionImages[sectionKey]);
+            showToast('Image uploaded successfully.', 'success');
+            refreshPdfPreview();
+        } catch (err) {
+            showToast('Network error during upload.', 'error');
+        } finally {
+            input.value = '';
+        }
+    }
+
+    async function updateSectionImage(sectionKey, filename, field, value) {
+        const imgs = sectionImages[sectionKey] || [];
+        const img = imgs.find(i => i.filename === filename);
+        if (img) img[field] = field === 'widthPercent' ? parseInt(value) : value;
+
+        try {
+            const res = await fetch(`/api/reports/${reportId}/images/${sectionKey}/${filename}`, {
+                method: 'PUT',
+                credentials: 'include',
+                headers: jsonHeaders(),
+                body: JSON.stringify({ [field]: value })
+            });
+            if (res.ok) refreshPdfPreview();
+        } catch (err) {
+            console.error('Failed to update image metadata:', err);
+        }
+    }
+
+    async function deleteSectionImage(sectionKey, filename) {
+        showConfirm('Remove this image from the report?', async () => {
+            try {
+                const res = await fetch(`/api/reports/${reportId}/images/${sectionKey}/${filename}`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: jsonHeaders()
+                });
+                if (!res.ok) {
+                    showToast('Failed to delete image.', 'error');
+                    return;
+                }
+                sectionImages[sectionKey] = (sectionImages[sectionKey] || []).filter(i => i.filename !== filename);
+                document.getElementById(`imgList_${sectionKey}`).innerHTML =
+                    renderImageThumbnails(sectionKey, sectionImages[sectionKey]);
+                showToast('Image removed.', 'success');
+                refreshPdfPreview();
+            } catch (err) {
+                showToast('Network error during delete.', 'error');
+            }
+            });
+    }
+
+    window.uploadSectionImage = uploadSectionImage;
+    window.updateSectionImage = updateSectionImage;
+    window.deleteSectionImage = deleteSectionImage;
+    
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadReport();
+
+        // Keep entry state predictable.
+        const editorTabEl = document.getElementById('editor-tab');
+        const previewTabEl = document.getElementById('preview-tab');
+        if (isAdminReadonly && previewTabEl && window.bootstrap?.Tab) {
+            window.bootstrap.Tab.getOrCreateInstance(previewTabEl).show();
+        } else if (editorTabEl && window.bootstrap?.Tab) {
+            window.bootstrap.Tab.getOrCreateInstance(editorTabEl).show();
+        }
+        
+        // Listen for tab switch to trigger PDF generation when preview is clicked
+        if (previewTabEl) {
+            previewTabEl.addEventListener('shown.bs.tab', function () {
+                refreshPdfPreview();
+            });
+        }
+    });
+
+    const loadReport = async () => {
+        try {
+            const res = await fetch(`/api/reports/${reportId}`, {
+                credentials: 'include',
+                headers: authHeaders()
+            });
+
+            if (!res.ok) {
+                document.getElementById('pageTitle').innerText = 'Report Not Found';
+                document.getElementById('editorSections').innerHTML = 
+                    '<div class="alert alert-danger">Error loading report. It may have been deleted.</div>';
+                return;
+            }
+
+            reportData = await res.json();
+
+            document.getElementById('pageTitle').innerText = reportData.projectTitle || 'Untitled Report';
+            applyAdminReadonlyMode();
+
+            // ── Status badge ────────────────────────────────────
+            const badge = document.getElementById('statusBadge');
+            const status = reportData.status || '';
+            if (status === 'generated' || status === 'edited') {
+                badge.innerText = 'READY';
+                badge.className = 'badge bg-success me-2';
+            } else if (status === 'generating') {
+                badge.innerText = 'GENERATING';
+                badge.className = 'badge bg-warning text-dark me-2';
+            } else if (status === 'error') {
+                badge.innerText = 'ERROR';
+                badge.className = 'badge bg-danger me-2';
+            } else {
+                badge.innerText = status.toUpperCase();
+                badge.className = 'badge bg-secondary me-2';
+            }
+            updateTimeline(status);
+            celebrateIfNew(reportId, status);
+
+            // ── If still generating — show spinner and poll ─────
+            const editorDiv = document.getElementById('editorSections');
+
+            if (status === 'generating') {
+                editorDiv.innerHTML = `
+                    <div class="alert alert-info border-0 d-flex align-items-center gap-3">
+                        <div class="spinner-border spinner-border-sm flex-shrink-0" role="status"></div>
+                        <div>
+                            <strong>AI is generating your report...</strong><br>
+                            <small class="text-muted">This usually takes 1–2 minutes. This page checks automatically every 10 seconds.</small>
+                        </div>
+                    </div>`;
+                document.getElementById('downloadPdfBtn').disabled = true;
+                setTimeout(loadReport, 15000);
+                return;
+            }
+
+            // ── If hard error ────────────────────────────────────
+            if (status === 'error') {
+                // The backend may have marked this as error due to a webhook timeout,
+                // while n8n is actually still running and will call back when done.
+                // If the report is less than 10 minutes old, keep polling before showing final error.
+                const createdAt = reportData.createdAt ? new Date(reportData.createdAt) : null;
+                const ageMinutes = createdAt ? (Date.now() - createdAt.getTime()) / 60000 : 999;
+
+                if (ageMinutes < 10) {
+                    editorDiv.innerHTML = `
+                        <div class="alert alert-warning border-0 d-flex align-items-center gap-3">
+                            <div class="spinner-border spinner-border-sm flex-shrink-0" role="status"></div>
+                            <div>
+                                <strong>Still working...</strong><br>
+                                <small class="text-muted">AI generation is taking longer than usual. This page will check again automatically in 15 seconds.</small>
+                            </div>
+                        </div>`;
+                    document.getElementById('downloadPdfBtn').disabled = true;
+                    setTimeout(loadReport, 15000);
+                    return;
+                }
+
+                // Report is older than 10 minutes and still errored — show real failure message.
+                editorDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <strong>Generation failed.</strong> Please go back and create a new report, or contact support.
+                    </div>`;
+                document.getElementById('downloadPdfBtn').disabled = true;
+                return;
+            }
+
+            // ── Build editable content ───────────────────────────
+            editableContent = reportData.editedContent && Object.keys(reportData.editedContent).length > 0
+                ? reportData.editedContent
+                : reportData.generatedContent || {};
+            editableContent = sanitizeEditableContent(editableContent);
+
+            const titles = reportData.generatedTitles || {};
+
+            // ── No content yet (edge case) ────────────────────────
+            if (Object.keys(editableContent).filter(k => !String(k).startsWith('__')).length === 0) {
+                editorDiv.innerHTML = '<div class="alert alert-warning">No content available.</div>';
+                document.getElementById('downloadPdfBtn').disabled = true;
+                return;
+            }
+
+            document.getElementById('downloadPdfBtn').disabled = false;
+
+            // ── Render textareas ─────────────────────────────────
+            let html = '';
+            for (const [key, text] of Object.entries(editableContent)) {
+                if (String(key).startsWith('__')) continue;
+                const title = titles[key] || key;
+                html += `
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">${title}</label>
+                        <textarea class="form-control section-editor" data-key="${key}" rows="8">${text}</textarea>
+                    </div>`;
+            }
+            editorDiv.innerHTML = html;
+
+            // ── Sync state on edit ───────────────────────────────
+            document.querySelectorAll('.section-editor').forEach(ta => {
+                if (isAdminReadonly) {
+                    ta.setAttribute('readonly', 'readonly');
+                }
+                ta.addEventListener('input', (e) => {
+                    if (isAdminReadonly) return;
+                    const k = e.target.getAttribute('data-key');
+                    editableContent[k] = e.target.value;
+                });
+            });
+
+            // ── Logo count listener (bind once) ──────────────────
+            const logoCountEl = document.getElementById('logoCount');
+            if (!logoCountEl.dataset.bound) {
+                logoCountEl.addEventListener('change', (e) => updateLogoCount(e.target.value));
+                logoCountEl.dataset.bound = '1';
+            }
+
+            renderLogoControls();
+            renderLayoutControls();
+
+            // ── Image manager ────────────────────────────────────
+            const sectionsForImageManager = Object.entries(editableContent)
+                .filter(([key]) => !String(key).startsWith('__'))
+                .map(([key]) => [
+                    key,
+                    (reportData.generatedTitles && reportData.generatedTitles[key]) || key
+                ]);
+            initImageManager(reportData, sectionsForImageManager);
+
+            // ── Initial PDF preview (only if on preview tab) ─────
+            const previewPane = document.getElementById('preview-pane');
+            if (previewPane && previewPane.classList.contains('active')) {
+                refreshPdfPreview();
+            }
+
+        } catch (e) {
+            console.error('loadReport error:', e);
+            document.getElementById('editorSections').innerHTML =
+                '<div class="alert alert-danger">Network error loading report.</div>';
+        }
+    };
+
+    const saveEdits = async () => {
+        if (isAdminReadonly) {
+            showToast('Read-only view for admin.', 'warning');
+            return;
+        }
+        const btn = document.getElementById('saveBtn');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
+        btn.disabled = true;
+        
+        try {
+            const res = await fetch(`/api/reports/${reportId}/content`, {
+                method: 'PUT',
+                credentials: 'include',
+                headers: jsonHeaders(),
+                body: JSON.stringify({ editedContent: sanitizeEditableContent(editableContent) })
+            });
+            
+            if (res.ok) {
+                btn.innerHTML = '<i class="bi bi-check"></i> Saved';
+                showToast('Changes saved successfully.', 'success');
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="bi bi-save"></i> Save Changes';
+                    btn.disabled = false;
+                }, 2000);
+                refreshPdfPreview();
+            } else {
+                showToast('Failed to save.', 'error');
+                btn.innerHTML = '<i class="bi bi-save"></i> Save Changes';
+                btn.disabled = false;
+            }
+        } catch (e) {
+            showToast('Network error.', 'error');
+            btn.innerHTML = '<i class="bi bi-save"></i> Save Changes';
+            btn.disabled = false;
+        }
+    };
+
+    const refreshPdfPreview = async () => {
+        const previewFrame = document.getElementById('pdfPreviewFrame');
+        const overlay = document.getElementById('pdfLoadingOverlay');
+        const progressBar = document.getElementById('pdfProgressBar');
+        if (!previewFrame || !overlay || !progressBar) return;
+        if (!reportData || Object.keys(editableContent).length === 0) return;
+
+        if (!overlay.dataset.defaultHtml) {
+            overlay.dataset.defaultHtml = overlay.innerHTML;
+        }
+
+        // Reset overlay in case previous attempt replaced it with error state.
+        overlay.innerHTML = overlay.dataset.defaultHtml;
+        const activeProgressBar = document.getElementById('pdfProgressBar');
+        if (!activeProgressBar) return;
+
+        // Show overlay, hide iframe
+        overlay.style.display = 'flex';
+        overlay.style.position = 'absolute';
+        overlay.style.inset = '0';
+        overlay.style.minHeight = '';
+        overlay.style.marginTop = '0';
+        overlay.style.padding = '';
+        overlay.style.overflow = '';
+        previewFrame.style.display = 'none';
+
+        // Animate progress bar: 0% -> 85% over 12 seconds (fake progress)
+        let progress = 0;
+        activeProgressBar.style.width = '0%';
+        const progressInterval = setInterval(() => {
+            // Slow down as it approaches 85%
+            const remaining = 85 - progress;
+            const increment = Math.max(0.5, remaining * 0.04);
+            progress = Math.min(85, progress + increment);
+            activeProgressBar.style.width = progress + '%';
+            if (progress >= 85) clearInterval(progressInterval);
+        }, 300);
+
+        try {
+            const res = await fetch(`/api/reports/${reportId}/pdf-preview`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: jsonHeaders(),
+                body: JSON.stringify({
+                    editedContent: sanitizeEditableContent(editableContent)
+                })
+            });
+
+            if (res.ok) {
+                const blob = await res.blob();
+
+                if (isMobilePreview()) {
+                    clearInterval(progressInterval);
+                    renderMobilePreviewFallback();
+                    return;
+                }
+
+                if (previewFrame._blobUrl) {
+                    URL.revokeObjectURL(previewFrame._blobUrl);
+                }
+                const objUrl = URL.createObjectURL(blob);
+                previewFrame._blobUrl = objUrl;
+
+                // Complete progress bar to 100%
+                clearInterval(progressInterval);
+                activeProgressBar.style.width = '100%';
+
+                // Hide overlay after iframe finishes loading.
+                previewFrame.onload = () => {
+                    previewFrame.style.display = 'block';
+                    overlay.style.display = 'none';
+                    activeProgressBar.style.width = '0%';
+                    previewFrame.onload = null;
+                };
+
+                // Short delay so user sees 100% before loading preview
+                setTimeout(() => {
+                    previewFrame.src = objUrl;
+                }, 300);
+
+            } else {
+                // On error: hide overlay, show error message
+                clearInterval(progressInterval);
+                overlay.innerHTML = `
+                    <div style="text-align:center; color:#dc2626;">
+                        <div style="font-size:24px; margin-bottom:8px;">⚠</div>
+                        <div style="font-size:14px; font-weight:500;">
+                            Failed to generate preview
+                        </div>
+                        <div style="font-size:12px; color:#6b6783; margin-top:4px;">
+                            Try saving your changes and retry
+                        </div>
+                        <button onclick="refreshPdfPreview()" style="
+                            margin-top:12px; padding:8px 20px;
+                            border-radius:8px; border:1px solid #e8e4f0;
+                            background:#fff; cursor:pointer; font-size:13px;
+                            color:#7c3aed; font-weight:500;
+                        ">Retry</button>
+                    </div>`;
+            }
+        } catch (e) {
+            clearInterval(progressInterval);
+            console.error('Failed to render PDF preview:', e);
+            overlay.innerHTML = `
+                <div style="text-align:center; color:#dc2626;">
+                    <div style="font-size:14px; font-weight:500;">Network error</div>
+                    <button onclick="refreshPdfPreview()" style="
+                        margin-top:12px; padding:8px 20px;
+                        border-radius:8px; border:1px solid #e8e4f0;
+                        background:#fff; cursor:pointer; font-size:13px;
+                    ">Retry</button>
+                </div>`;
+        }
+    };
+    window.refreshPdfPreview = refreshPdfPreview;
+    window.openPreviewInNewTab = openPreviewInNewTab;
+
+    const downloadPdf = async () => {
+        const btn = document.getElementById('downloadPdfBtn');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...';
+        btn.disabled = true;
+
+        try {
+            const res = await fetch(`/api/reports/${reportId}/pdf-preview`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: jsonHeaders(),
+                body: JSON.stringify({ editedContent: sanitizeEditableContent(editableContent) })
+            });
+            
+            if (res.ok) {
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `${reportData.projectTitle || 'Report'}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                showToast('PDF downloaded successfully.', 'success');
+                updateTimeline('downloaded');
+            } else {
+                showToast('Failed to download PDF.', 'error');
+            }
+        } catch (e) {
+            showToast('Failed to download PDF.', 'error');
+        } finally {
+            btn.innerHTML = '<i class="bi bi-file-pdf"></i> Download PDF';
+            btn.disabled = false;
+        }
+    };
+    window.downloadPdf = downloadPdf;
+
+    const openPdfBtn = document.getElementById('openPdfBtn');
+    if (openPdfBtn) {
+        openPdfBtn.addEventListener('click', openPreviewInNewTab);
+    }
+</script>
+{% endblock %}

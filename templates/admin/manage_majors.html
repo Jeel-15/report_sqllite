@@ -1,0 +1,313 @@
+{% extends "admin/layout.html" %}
+{% set active_page = 'majors' %}
+
+{% block title %}Majors - ReportGen Admin{% endblock %}
+
+{% block admin_content %}
+<section class="dashboard-grid">
+  <div>
+    <h1 class="page-title">Manage Major Policies</h1>
+    <p class="page-subtitle">Configure language, content policy, and report sections for each major.</p>
+  </div>
+
+  <div class="stats-inline">
+    <button class="btn-primary" type="button" onclick="openCreate()"><i data-lucide="plus" style="width:14px;height:14px;"></i>Add Major</button>
+  </div>
+
+  <article class="panel-card panel-body" style="display:grid;gap:12px;">
+    <h3 style="margin:0;font-size:16px;color:#0f172a;">Filter by Degree</h3>
+    <div class="toolbar" style="display:grid;grid-template-columns:minmax(260px,420px) 140px;gap:12px;">
+      <select id="filterDegree" class="small-input"></select>
+      <button class="btn-ghost" type="button" onclick="loadMajors()">Apply</button>
+    </div>
+  </article>
+
+  <article class="panel-card panel-body table-card">
+    <div class="data-table-wrap">
+      <table class="data-table stagger-table">
+        <thead>
+          <tr>
+            <th>Name</th><th>Degree</th><th>Language</th><th>Content Type</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="rows"><tr><td colspan="5" style="text-align:center;color:#94a3b8;">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </article>
+</section>
+
+<div class="modal fade" id="majorModal" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle">Major Policy</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="majorId">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Degree *</label>
+            <select id="degree" class="form-select"></select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Major Name *</label>
+            <input id="name" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Report Language</label>
+            <input id="reportLanguage" class="form-control" value="English">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Report Content Type</label>
+            <input id="reportContentType" class="form-control" value="Text">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Allowed Languages (comma separated)</label>
+            <input id="allowedLanguages" class="form-control" placeholder="English, Hindi">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Content Features (comma separated)</label>
+            <input id="contentFeatures" class="form-control" placeholder="text, images, analysis">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Generation Instruction</label>
+            <textarea id="generationInstruction" class="form-control" rows="3"></textarea>
+          </div>
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="strictLanguageOnly">
+              <label class="form-check-label" for="strictLanguageOnly">Strict Language Only</label>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="border rounded p-3 bg-light-subtle">
+              <h6 class="mb-2">Image Policy</h6>
+              <div class="row g-2 align-items-end">
+                <div class="col-md-3">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="imagesRequired">
+                    <label class="form-check-label" for="imagesRequired">Enable Images</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between">
+              <label class="form-label mb-0">Report Sections (optional)</label>
+              <button type="button" class="btn btn-sm btn-outline-primary" onclick="addSectionRow()">Add Section</button>
+            </div>
+            <div id="reportSectionsList" class="mt-2" style="display:grid;gap:10px;"></div>
+            <div class="form-text">Add section title and description. We will auto-manage technical keys for you.</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button class="btn btn-primary" onclick="saveMajor()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_js %}
+<script>
+const token = localStorage.getItem('token');
+if (!token) location.href = '/login';
+const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+let modal;
+let degrees = [];
+
+function parseCsv(value) {
+  return String(value || '').split(',').map(v => v.trim()).filter(Boolean);
+}
+
+function makeSectionKey(title, index) {
+  const slug = String(title || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '_')
+    .replace(/-+/g, '_');
+  return slug || `section_${index + 1}`;
+}
+
+function addSectionRow(section = {}) {
+  const list = document.getElementById('reportSectionsList');
+  const row = document.createElement('div');
+  row.className = 'border rounded p-2 bg-light-subtle';
+  row.innerHTML = `
+    <div class="row g-2 align-items-start">
+      <div class="col-md-4">
+        <label class="form-label mb-1">Section Title</label>
+        <input class="form-control section-title" placeholder="Introduction" value="${String(section.title || '').replace(/\"/g, '&quot;')}">
+      </div>
+      <div class="col-md-7">
+        <label class="form-label mb-1">Description</label>
+        <input class="form-control section-description" placeholder="What should this section include?" value="${String(section.description || '').replace(/\"/g, '&quot;')}">
+      </div>
+      <div class="col-md-1 d-flex align-items-end justify-content-end">
+        <button type="button" class="btn btn-outline-danger btn-sm remove-section" title="Remove section" aria-label="Remove section" style="min-width:40px;height:38px;display:flex;align-items:center;justify-content:center;">
+          <i data-lucide="x" style="width:16px;height:16px;"></i>
+        </button>
+      </div>
+    </div>
+  `;
+  row.querySelector('.remove-section').addEventListener('click', () => row.remove());
+  list.appendChild(row);
+  if (window.lucide) lucide.createIcons();
+}
+
+function getReportSectionsFromUi() {
+  const rows = document.querySelectorAll('#reportSectionsList > div');
+  const sections = [];
+
+  rows.forEach((row, index) => {
+    const title = row.querySelector('.section-title')?.value?.trim() || '';
+    const description = row.querySelector('.section-description')?.value?.trim() || '';
+    if (!title && !description) return;
+
+    sections.push({
+      key: makeSectionKey(title, index),
+      title: title || `Section ${index + 1}`,
+      description,
+    });
+  });
+
+  return sections;
+}
+
+function buildPayload() {
+  const sections = getReportSectionsFromUi();
+
+  return {
+    name: document.getElementById('name').value.trim(),
+    degree: document.getElementById('degree').value,
+    reportLanguage: document.getElementById('reportLanguage').value.trim() || 'English',
+    reportContentType: document.getElementById('reportContentType').value.trim() || 'Text',
+    reportSections: sections,
+    reportPolicy: {
+      strictLanguageOnly: document.getElementById('strictLanguageOnly').checked,
+      allowedLanguages: parseCsv(document.getElementById('allowedLanguages').value),
+      generationInstruction: document.getElementById('generationInstruction').value,
+      contentFeatures: parseCsv(document.getElementById('contentFeatures').value).map(v => v.toLowerCase()),
+      imagesRequired: document.getElementById('imagesRequired').checked
+    }
+  };
+}
+
+function setDegreeOptions(id, selected = '') {
+  const select = document.getElementById(id);
+  select.innerHTML = '<option value="">Select Degree</option>' + degrees.map(d => {
+    const selectedAttr = String(d._id) === String(selected) ? 'selected' : '';
+    return `<option value="${d._id}" ${selectedAttr}>${d.name}</option>`;
+  }).join('');
+}
+
+async function loadDegrees() {
+  const res = await fetch('/api/admin/degrees', { headers });
+  degrees = await res.json();
+  setDegreeOptions('filterDegree', document.getElementById('filterDegree').value || '');
+  setDegreeOptions('degree', document.getElementById('degree').value || '');
+}
+
+async function loadMajors() {
+  const degree = document.getElementById('filterDegree').value;
+  const qs = degree ? `?degree=${encodeURIComponent(degree)}` : '';
+  const res = await fetch('/api/admin/majors' + qs, { headers });
+  const data = await res.json();
+  document.getElementById('rows').innerHTML = (data || []).map(m => `
+    <tr>
+      <td>${m.name}</td>
+      <td>${m.degree?.name || '-'}</td>
+      <td>${m.reportLanguage || '-'}</td>
+      <td>${m.reportContentType || '-'}</td>
+      <td>
+        <div class="icon-actions">
+          <button class="toggle-action" onclick='openEdit(${JSON.stringify(m)})' title="Edit"><i data-lucide="pencil" style="width:16px;height:16px;"></i></button>
+          <button class="danger-action" onclick='deleteMajor("${m._id}")' title="Delete"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+        </div>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" style="text-align:center;color:#94a3b8;">No majors found</td></tr>';
+  if (window.lucide) lucide.createIcons();
+  window.AdminUI?.staggerRows();
+}
+
+function openCreate() {
+  document.getElementById('modalTitle').innerText = 'Add Major';
+  document.getElementById('majorId').value = '';
+  document.getElementById('name').value = '';
+  document.getElementById('reportLanguage').value = 'English';
+  document.getElementById('reportContentType').value = 'Text';
+  document.getElementById('allowedLanguages').value = '';
+  document.getElementById('contentFeatures').value = '';
+  document.getElementById('generationInstruction').value = '';
+  document.getElementById('strictLanguageOnly').checked = false;
+  document.getElementById('imagesRequired').checked = false;
+  document.getElementById('reportSectionsList').innerHTML = '';
+  addSectionRow();
+  setDegreeOptions('degree', '');
+  modal.show();
+}
+
+function openEdit(m) {
+  document.getElementById('modalTitle').innerText = 'Edit Major';
+  document.getElementById('majorId').value = m._id;
+  document.getElementById('name').value = m.name || '';
+  document.getElementById('reportLanguage').value = m.reportLanguage || 'English';
+  document.getElementById('reportContentType').value = m.reportContentType || 'Text';
+  document.getElementById('allowedLanguages').value = (m.reportPolicy?.allowedLanguages || []).join(', ');
+  document.getElementById('contentFeatures').value = (m.reportPolicy?.contentFeatures || []).join(', ');
+  document.getElementById('generationInstruction').value = m.reportPolicy?.generationInstruction || '';
+  document.getElementById('strictLanguageOnly').checked = m.reportPolicy?.strictLanguageOnly === true;
+  document.getElementById('imagesRequired').checked = m.reportPolicy?.imagesRequired === true;
+  document.getElementById('reportSectionsList').innerHTML = '';
+  if (Array.isArray(m.reportSections) && m.reportSections.length) {
+    m.reportSections.forEach(section => addSectionRow(section));
+  } else {
+    addSectionRow();
+  }
+  setDegreeOptions('degree', m.degree?._id || m.degree || '');
+  modal.show();
+}
+
+async function saveMajor() {
+  let payload;
+  try { payload = buildPayload(); } catch (e) { alert(e.message); return; }
+
+  if (!payload.name || !payload.degree) {
+    alert('Name and degree are required');
+    return;
+  }
+
+  const id = document.getElementById('majorId').value;
+  const url = id ? `/api/admin/majors/${id}` : '/api/admin/majors';
+  const method = id ? 'PUT' : 'POST';
+
+  const res = await fetch(url, { method, headers, body: JSON.stringify(payload) });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    alert(data.message || 'Save failed');
+    return;
+  }
+
+  modal.hide();
+  loadMajors();
+}
+
+async function deleteMajor(id) {
+  if (!confirm('Delete this major?')) return;
+  await fetch(`/api/admin/majors/${id}`, { method: 'DELETE', headers });
+  loadMajors();
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  modal = new bootstrap.Modal(document.getElementById('majorModal'));
+  await loadDegrees();
+  await loadMajors();
+});
+</script>
+{% endblock %}

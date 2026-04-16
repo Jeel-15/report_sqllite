@@ -1,0 +1,53 @@
+<style>
+  .foot-legal-links { display: flex; gap: 1rem; }
+  .foot-legal-links a { font-size: 12px; color: var(--foot-muted, #94a3b8); text-decoration: none; }
+  .foot-legal-links a:hover { color: #fff; }
+  .foot-bottom { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+</style>
+
+<footer id="footer">
+  <div class="foot-top">
+    <div class="foot-brand">
+      <a href="{{ url_for('pages.home') }}" class="foot-logo">
+        <div class="nav-logo-mark" style="width:24px;height:24px;border-radius:6px">
+          <svg viewBox="0 0 16 16" width="11" height="11"><path d="M3 2h10v1H3zM3 5h7v1H3zM3 8h10v1H3zM3 11h5v1H3z" fill="white"/></svg>
+        </div>
+        ReportGen
+      </a>
+      <p class="foot-tagline">AI-powered internship report drafting platform for university submissions.</p>
+    </div>
+    <div class="foot-grid">
+      <div>
+        <div class="foot-col-title">Product</div>
+        <ul class="foot-links">
+          <li><a href="{{ url_for('pages.home') }}#how">How it works</a></li>
+          <li><a href="{{ url_for('pages.home') }}#preview">Sample output</a></li>
+          <li><a href="{{ url_for('pages.home') }}#pricing">Pricing plans</a></li>
+          <li><a href="{{ url_for('pages.home') }}#testimonials">Student reviews</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="foot-col-title">Resources</div>
+        <ul class="foot-links">
+          <li><a href="#">Writing Guide</a></li>
+          <li><a href="#">FAQs</a></li>
+          <li><a href="#">Templates</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="foot-col-title">Support</div>
+        <div class="foot-meta">support@reportgen.demo</div>
+        <div class="foot-meta">+91 99999 99999</div>
+        <div class="foot-meta">Mon-Sat, 10:00 AM - 7:00 PM</div>
+        <div class="foot-meta" style="margin-top:6px;">Demo Tech Park, SG Highway<br>Ahmedabad, Gujarat 380015</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span class="foot-copy">© 2026 ReportGen. All rights reserved.</span>
+    <div class="foot-legal-links">
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+    </div>
+  </div>
+</footer>

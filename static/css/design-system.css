@@ -1,0 +1,287 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   DESIGN SYSTEM - CSS Variables & Base Styles
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ════ COLOR PALETTE ════ */
+  --color-ink: #0f0f1e;
+  --color-ink-2: #1a1a2e;
+  --color-ink-3: #2d2d44;
+  --color-blue: #1a4fd6;
+  --color-blue-2: #2563eb;
+  --color-blue-3: #3b7bff;
+  --color-blue-light: #93c5fd;
+  --color-blue-faint: #eff6ff;
+  --color-purple: #7c3aed;
+  --color-purple-2: #a78bfa;
+  --color-pink: #e84393;
+  --color-green: #059669;
+  --color-green-light: #ecfdf5;
+  --color-amber: #d97706;
+  --color-red: #dc2626;
+  --color-white: #ffffff;
+  --color-gray-light: #f5f5f5;
+  --color-gray-2: #e5e5e5;
+  --color-gray-3: #d4d4d4;
+  --color-gray-4: #a3a3a3;
+  --color-gray-5: #737373;
+  --color-gray-6: #525252;
+  --color-gray-7: #404040;
+  --color-text-dark: #0f172a;
+  --color-text-muted: #6b6783;
+  --color-text-muted-2: #9b97b0;
+  --color-border-light: #e8e4f0;
+  --color-border-soft: rgba(255, 255, 255, 0.08);
+  
+  /* ════ TYPOGRAPHY ════ */
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  --font-size-5xl: 3rem;
+  
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  
+  /* ════ SPACING ════ */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 2.5rem;
+  --spacing-3xl: 3rem;
+  --spacing-4xl: 4rem;
+  --spacing-5xl: 6rem;
+  
+  /* ════ BORDER RADIUS ════ */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 999px;
+  
+  /* ════ SHADOWS ════ */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 28px rgba(15, 15, 30, 0.08);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.12);
+  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.15);
+  
+  /* ════ DURATIONS & EASING ════ */
+  --duration-fast: 0.15s;
+  --duration-normal: 0.25s;
+  --duration-slow: 0.35s;
+  --duration-slower: 0.5s;
+  --ease-in-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  
+  /* ════ Z-INDEX ════ */
+  --z-hide: -1;
+  --z-base: 0;
+  --z-dropdown: 1000;
+  --z-sticky: 999;
+  --z-fixed: 1050;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1070;
+  --z-tooltip: 1080;
+  --z-navbar: 900;
+  --z-footer: 50;
+  
+  /* ════ BREAKPOINTS ════ */
+  --breakpoint-xs: 0;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════ */
+/* BASE STYLES */
+/* ═════════════════════════════════════════════════════════════════════════════ */
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+  color: var(--color-text-dark);
+  background-color: var(--color-white);
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ════ TYPOGRAPHY ════ */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+  margin: 0;
+  color: var(--color-ink);
+}
+
+h1 { font-size: var(--font-size-5xl); }
+h2 { font-size: var(--font-size-4xl); }
+h3 { font-size: var(--font-size-3xl); }
+h4 { font-size: var(--font-size-2xl); }
+h5 { font-size: var(--font-size-xl); }
+h6 { font-size: var(--font-size-lg); }
+
+p {
+  margin: 0;
+  color: var(--color-text-dark);
+}
+
+a {
+  color: var(--color-blue-2);
+  text-decoration: none;
+  transition: color var(--duration-normal) var(--ease-in-out);
+}
+
+a:hover {
+  color: var(--color-blue-3);
+}
+
+/* ════ TABLES ════ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+th, td {
+  padding: var(--spacing-md);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+th {
+  font-weight: var(--font-weight-semibold);
+  background-color: var(--color-gray-light);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/* ════ LISTS ════ */
+ul, ol {
+  margin: 0;
+  padding-left: var(--spacing-lg);
+}
+
+li {
+  margin: 0;
+  line-height: 1.8;
+}
+
+/* ════ CODE ════ */
+code {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  background-color: var(--color-gray-light);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-md);
+  color: var(--color-ink-2);
+}
+
+pre {
+  background-color: var(--color-gray-light);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  overflow-x: auto;
+}
+
+/* ════ IMAGES ════ */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ════ FORM ELEMENTS ════ */
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* ════ UTILITY RESETS ════ */
+/* Note: removed 'all: unset' rules that were breaking Bootstrap components */
+
+/* ════ FOCUS STATES ════ */
+:focus-visible {
+  outline: 2px solid var(--color-blue-2);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
+}
+
+/* ════ SCROLLBAR ════ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-gray-light);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-gray-4);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gray-5);
+}
+
+/* ════ SELECTION ════ */
+::selection {
+  background-color: var(--color-blue-2);
+  color: var(--color-white);
+}
+
+/* Dark mode placeholder */
+@media (prefers-color-scheme: dark) {
+  /* Can be extended in future */
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Services{% endblock %}
+
+{% block extra_css %}
+{% include 'partials/admin_dark_theme.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>Manage Services</h3>
+  <button class="btn btn-primary" onclick="openCreate()">Add Service</button>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body table-responsive">
+    <table class="table table-striped align-middle">
+      <thead><tr><th>Name</th><th>Type</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="rows"><tr><td colspan="5" class="text-center">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal fade" id="serviceModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Service</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <input type="hidden" id="serviceId">
+        <div class="mb-2"><label class="form-label">Name</label><input id="name" class="form-control"></div>
+        <div class="mb-2"><label class="form-label">Type</label><select id="type" class="form-select"><option value="report">report</option><option value="resume">resume</option><option value="task">task</option></select></div>
+        <div class="mb-2"><label class="form-label">Price</label><input id="price" type="number" class="form-control" value="0"></div>
+        <div class="mb-2"><label class="form-label">Description</label><textarea id="description" class="form-control"></textarea></div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button class="btn btn-primary" onclick="save()">Save</button></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const token = localStorage.getItem('token');
+if (!token) location.href = '/login';
+const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+let modal;
+
+async function load() {
+  const res = await fetch('/api/admin/services', { headers });
+  const data = await res.json();
+  document.getElementById('rows').innerHTML = (data || []).map(s => `
+    <tr>
+      <td>${s.name}</td><td>${s.type}</td><td>${s.price}</td>
+      <td>${s.isActive ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>'}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-warning" onclick='openEdit(${JSON.stringify(s)})'>Edit</button>
+        <button class="btn btn-sm btn-outline-danger" onclick='del("${s._id}")'>Delete</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="5" class="text-center">No data</td></tr>';
+}
+
+function openCreate() {
+  document.getElementById('serviceId').value = '';
+  document.getElementById('name').value = '';
+  document.getElementById('type').value = 'report';
+  document.getElementById('price').value = 0;
+  document.getElementById('description').value = '';
+  modal.show();
+}
+
+function openEdit(s) {
+  document.getElementById('serviceId').value = s._id;
+  document.getElementById('name').value = s.name || '';
+  document.getElementById('type').value = s.type || 'report';
+  document.getElementById('price').value = s.price || 0;
+  document.getElementById('description').value = s.description || '';
+  modal.show();
+}
+
+async function save() {
+  const id = document.getElementById('serviceId').value;
+  const payload = {
+    name: document.getElementById('name').value.trim(),
+    type: document.getElementById('type').value,
+    price: Number(document.getElementById('price').value || 0),
+    description: document.getElementById('description').value,
+  };
+  const url = id ? `/api/admin/services/${id}` : '/api/admin/services';
+  const method = id ? 'PUT' : 'POST';
+  await fetch(url, { method, headers, body: JSON.stringify(payload) });
+  modal.hide();
+  load();
+}
+
+async function del(id) {
+  if (!confirm('Delete service?')) return;
+  await fetch(`/api/admin/services/${id}`, { method: 'DELETE', headers });
+  load();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  modal = new bootstrap.Modal(document.getElementById('serviceModal'));
+  load();
+});
+</script>
+{% endblock %}

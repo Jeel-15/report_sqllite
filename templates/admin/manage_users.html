@@ -1,0 +1,371 @@
+{% extends "admin/layout.html" %}
+{% set active_page = 'students' %}
+
+{% block title %}Students - ReportGen Admin{% endblock %}
+
+{% block page_css %}
+<style>
+    #detailsBackdrop {
+        backdrop-filter: blur(2px);
+        background: rgba(15, 23, 42, 0.42);
+    }
+    #detailsModal .confirm-card {
+        min-width: 560px;
+        max-width: 680px;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 24px 60px rgba(2, 6, 23, 0.22);
+        overflow: hidden;
+        padding: 0;
+    }
+    .student-detail-head {
+        padding: 18px 22px;
+        background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .student-detail-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        color: #1d4ed8;
+        background: #dbeafe;
+        border: 1px solid #bfdbfe;
+        flex-shrink: 0;
+    }
+    .student-detail-title {
+        margin: 0;
+        font-size: 27px;
+        line-height: 1.15;
+        color: #0f172a;
+    }
+    .student-detail-sub {
+        margin: 4px 0 0;
+        font-size: 13px;
+        color: #475569;
+    }
+    .student-detail-grid {
+        padding: 18px 22px 8px;
+        display: grid;
+        grid-template-columns: 170px 1fr;
+        row-gap: 10px;
+        column-gap: 12px;
+        color: #334155;
+        font-size: 15px;
+    }
+    .student-detail-grid strong {
+        color: #0f172a;
+        font-weight: 700;
+    }
+    .student-detail-actions {
+        padding: 14px 22px 18px;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: flex-end;
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<section class="dashboard-grid">
+    <div>
+        <h1 class="page-title">Students</h1>
+        <p class="page-subtitle">Manage all student accounts, enrollment status, and profile health.</p>
+    </div>
+
+    <div class="stats-inline">
+        <span class="stats-chip">Total: <b id="statTotal">0</b></span>
+        <span class="stats-chip">Active: <b id="statActive">0</b></span>
+        <span class="stats-chip">Inactive: <b id="statInactive">0</b></span>
+    </div>
+
+    <article class="panel-card panel-body table-card">
+        <div class="toolbar">
+            <input class="small-input" type="text" placeholder="Search students" id="userSearch">
+            <select class="small-input" id="userUniversityFilter"><option value="">All Universities</option></select>
+            <select class="small-input" id="userStatusFilter">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </select>
+            <button class="btn-primary" type="button" style="margin-left:auto;"><i data-lucide="user-plus" style="width:14px;height:14px;"></i>Add Student</button>
+        </div>
+
+        <div class="data-table-wrap">
+            <table class="data-table stagger-table">
+                <thead>
+                    <tr>
+                        <th>Avatar + Name</th>
+                        <th>Email</th>
+                        <th>University</th>
+                        <th>Reports Count</th>
+                        <th>Status</th>
+                        <th>Joined Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="7" style="text-align:center;color:#94a3b8;">Loading students...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-foot">
+            <span style="font-size:13px;color:#64748b;" id="usersFoot">Showing 0-0 of 0 students</span>
+            <div class="pager">
+                <button type="button">&lt;</button><button type="button" class="active">1</button><button type="button">2</button><button type="button">3</button><span style="font-size:12px;color:#94a3b8;">...</span><button type="button" id="usersLastPage">1</button><button type="button">&gt;</button>
+            </div>
+        </div>
+    </article>
+</section>
+
+<div class="modal-backdrop-custom" id="confirmBackdrop"></div>
+<div class="confirm-modal" id="confirmModal">
+    <div class="confirm-card">
+        <h4>Delete Student</h4>
+        <p id="confirmText">Are you sure you want to delete this student?</p>
+        <div class="confirm-actions">
+            <button class="btn-ghost" type="button" id="cancelDelete">Cancel</button>
+            <button class="btn-primary" type="button" id="confirmDelete" style="background:#ef4444;border-color:#ef4444;">Delete</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-backdrop-custom" id="detailsBackdrop"></div>
+<div class="confirm-modal" id="detailsModal">
+    <div class="confirm-card">
+        <div class="student-detail-head">
+            <div class="student-detail-avatar" id="detailInitials">NA</div>
+            <div>
+                <h4 class="student-detail-title">Student Details</h4>
+                <p class="student-detail-sub" id="detailSubline">Profile snapshot</p>
+            </div>
+        </div>
+        <div class="student-detail-grid">
+            <strong>Name</strong><span id="detailName">-</span>
+            <strong>Email</strong><span id="detailEmail">-</span>
+            <strong>University</strong><span id="detailUniversity">-</span>
+            <strong>Degree</strong><span id="detailDegree">-</span>
+            <strong>Major</strong><span id="detailMajor">-</span>
+            <strong>Phone</strong><span id="detailPhone">-</span>
+        </div>
+        <div class="student-detail-actions">
+            <button class="btn-primary" type="button" id="closeDetails">Close</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_js %}
+<script>
+    const usersBody = document.querySelector('.data-table tbody');
+    const userSearch = document.getElementById('userSearch');
+    const userUniversityFilter = document.getElementById('userUniversityFilter');
+    const userStatusFilter = document.getElementById('userStatusFilter');
+    const usersFoot = document.getElementById('usersFoot');
+    const usersLastPage = document.getElementById('usersLastPage');
+    const statTotal = document.getElementById('statTotal');
+    const statActive = document.getElementById('statActive');
+    const statInactive = document.getElementById('statInactive');
+
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmBackdrop = document.getElementById('confirmBackdrop');
+    const confirmText = document.getElementById('confirmText');
+    const cancelDelete = document.getElementById('cancelDelete');
+    const confirmDelete = document.getElementById('confirmDelete');
+
+    const detailsModal = document.getElementById('detailsModal');
+    const detailsBackdrop = document.getElementById('detailsBackdrop');
+    const closeDetails = document.getElementById('closeDetails');
+    const detailInitials = document.getElementById('detailInitials');
+    const detailSubline = document.getElementById('detailSubline');
+    const detailName = document.getElementById('detailName');
+    const detailEmail = document.getElementById('detailEmail');
+    const detailUniversity = document.getElementById('detailUniversity');
+    const detailDegree = document.getElementById('detailDegree');
+    const detailMajor = document.getElementById('detailMajor');
+    const detailPhone = document.getElementById('detailPhone');
+
+    let allUsers = [];
+    let targetId = '';
+    let targetName = '';
+
+    const initials = (name) => {
+        const parts = String(name || 'NA').trim().split(/\s+/).filter(Boolean);
+        return (parts[0]?.[0] || 'N') + (parts[1]?.[0] || 'A');
+    };
+
+    const closeModal = () => {
+        confirmModal.style.display = 'none';
+        confirmBackdrop.style.display = 'none';
+    };
+
+    const closeDetailsModal = () => {
+        detailsModal.style.display = 'none';
+        detailsBackdrop.style.display = 'none';
+    };
+
+    const fillUniversityFilter = (rows) => {
+        const names = [...new Set(rows.map((u) => u.university?.name).filter(Boolean))].sort();
+        userUniversityFilter.innerHTML = '<option value="">All Universities</option>' + names.map((name) => `<option value="${name}">${name}</option>`).join('');
+    };
+
+    const getReportCountsByUser = async () => {
+        try {
+            const reports = await window.AdminUI.adminApiGet('/api/admin/reports') || [];
+            const byUser = {};
+            reports.forEach((r) => {
+                const id = r.user?._id;
+                if (!id) return;
+                byUser[id] = (byUser[id] || 0) + 1;
+            });
+            return byUser;
+        } catch (_) {
+            return {};
+        }
+    };
+
+    const renderUsers = (rows) => {
+        if (!rows.length) {
+            usersBody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;">No students found.</td></tr>';
+            usersFoot.textContent = 'Showing 0-0 of 0 students';
+            usersLastPage.textContent = '1';
+            return;
+        }
+
+        usersBody.innerHTML = rows.map((u) => {
+            const reportsCount = Number(u.reportCount || 0);
+            const active = Boolean(u.isActive);
+            return `
+                <tr>
+                    <td><div class="name-cell"><span class="mini-avatar">${initials(u.name)}</span><div class="name-meta"><strong>${u.name || '-'}</strong><small>${u.degree?.name || '-'}${u.major?.name ? ` - ${u.major.name}` : ''}</small></div></div></td>
+                    <td>${u.email || '-'}</td>
+                    <td>${u.university?.name || '-'}</td>
+                    <td>${reportsCount}</td>
+                    <td><span class="status-badge ${active ? 'status-generated' : 'status-draft'}">${active ? 'Active' : 'Inactive'}</span></td>
+                    <td>${u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN') : '-'}</td>
+                    <td><div class="icon-actions"><button class="view-action" data-id="${u._id}" title="View"><i data-lucide="eye" style="width:16px;height:16px;"></i></button><button class="toggle-action" data-id="${u._id}" title="Toggle"><i data-lucide="refresh-ccw" style="width:16px;height:16px;"></i></button><button class="danger-action" data-id="${u._id}" data-name="${u.name || 'Student'}" title="Delete"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button></div></td>
+                </tr>
+            `;
+        }).join('');
+
+        usersFoot.textContent = `Showing 1-${rows.length} of ${rows.length.toLocaleString('en-IN')} students`;
+        usersLastPage.textContent = `${Math.max(1, Math.ceil(rows.length / 10)).toLocaleString('en-IN')}`;
+
+        if (window.lucide) lucide.createIcons();
+        bindRowActions();
+        window.AdminUI?.staggerRows();
+    };
+
+    const applyFilters = () => {
+        const q = userSearch.value.trim().toLowerCase();
+        const uni = userUniversityFilter.value;
+        const status = userStatusFilter.value;
+
+        const rows = allUsers.filter((u) => {
+            const matchesQ = !q || String(u.name || '').toLowerCase().includes(q) || String(u.email || '').toLowerCase().includes(q);
+            const matchesUni = !uni || (u.university?.name || '') === uni;
+            const matchesStatus = !status || (status === 'active' ? !!u.isActive : !u.isActive);
+            return matchesQ && matchesUni && matchesStatus;
+        });
+
+        renderUsers(rows);
+    };
+
+    const bindRowActions = () => {
+        document.querySelectorAll('.danger-action').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                targetId = btn.dataset.id || '';
+                targetName = btn.dataset.name || 'this student';
+                confirmText.textContent = `Are you sure you want to delete ${targetName}? This action cannot be undone.`;
+                confirmModal.style.display = 'flex';
+                confirmBackdrop.style.display = 'block';
+            });
+        });
+
+        document.querySelectorAll('.toggle-action').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                try {
+                    await fetch(`/api/admin/users/${btn.dataset.id}/toggle`, {
+                        method: 'PUT',
+                        headers: { Authorization: `Bearer ${window.AdminUI.getAuthToken()}` }
+                    });
+                    await loadUsers();
+                } catch (err) {
+                    console.error(err);
+                }
+            });
+        });
+
+        document.querySelectorAll('.view-action').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                try {
+                    const u = await window.AdminUI.adminApiGet(`/api/admin/users/${btn.dataset.id}`);
+                    if (!u) return;
+                    detailInitials.textContent = initials(u.name);
+                    detailSubline.textContent = `${u.degree?.name || '-'}${u.major?.name ? ` • ${u.major.name}` : ''}`;
+                    detailName.textContent = u.name || '-';
+                    detailEmail.textContent = u.email || '-';
+                    detailUniversity.textContent = u.university?.name || '-';
+                    detailDegree.textContent = u.degree?.name || '-';
+                    detailMajor.textContent = u.major?.name || '-';
+                    detailPhone.textContent = u.phone || '-';
+                    detailsModal.style.display = 'flex';
+                    detailsBackdrop.style.display = 'block';
+                } catch (err) {
+                    console.error(err);
+                }
+            });
+        });
+    };
+
+    const loadUsers = async () => {
+        try {
+            usersBody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;">Loading students...</td></tr>';
+            const users = await window.AdminUI.adminApiGet('/api/admin/users') || [];
+            const reportCounts = await getReportCountsByUser();
+            allUsers = users.map((u) => ({ ...u, reportCount: reportCounts[u._id] || 0 }));
+
+            statTotal.textContent = allUsers.length.toLocaleString('en-IN');
+            statActive.textContent = allUsers.filter((u) => u.isActive).length.toLocaleString('en-IN');
+            statInactive.textContent = allUsers.filter((u) => !u.isActive).length.toLocaleString('en-IN');
+
+            fillUniversityFilter(allUsers);
+            applyFilters();
+        } catch (err) {
+            console.error(err);
+            usersBody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#ef4444;">Failed to load students. Please refresh.</td></tr>';
+            usersFoot.textContent = 'Unable to load student data';
+        }
+    };
+
+    userSearch.addEventListener('input', applyFilters);
+    userUniversityFilter.addEventListener('change', applyFilters);
+    userStatusFilter.addEventListener('change', applyFilters);
+
+    cancelDelete.addEventListener('click', closeModal);
+    confirmBackdrop.addEventListener('click', closeModal);
+    closeDetails.addEventListener('click', closeDetailsModal);
+    detailsBackdrop.addEventListener('click', closeDetailsModal);
+    confirmDelete.addEventListener('click', async () => {
+        if (!targetId) return;
+        try {
+            await fetch(`/api/admin/users/${targetId}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${window.AdminUI.getAuthToken()}` }
+            });
+            closeModal();
+            await loadUsers();
+        } catch (err) {
+            console.error(err);
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', loadUsers);
+</script>
+{% endblock %}

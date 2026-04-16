@@ -1,0 +1,1275 @@
+{% extends "base.html" %}
+
+{% block title %}My Reports - Student Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background:
+            radial-gradient(1100px 420px at -10% -20%, rgba(59, 130, 246, 0.16), transparent 62%),
+            radial-gradient(980px 360px at 110% -16%, rgba(147, 197, 253, 0.25), transparent 58%),
+            linear-gradient(180deg, #f6f9ff 0%, #eef4ff 100%);
+        color: #0f172a;
+    }
+
+    .dashboard-shell {
+        --dash-card: #ffffff;
+        --dash-card-soft: #f8fbff;
+        --dash-border: #d7e5ff;
+        --dash-text: #0f172a;
+        --dash-muted: #475569;
+    }
+
+    .dashboard-shell { animation: pageIn .4s ease both; }
+
+    @keyframes pageIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .dashboard-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .dashboard-title { margin-bottom: 0.2rem; }
+
+    .welcome-banner {
+        position: relative;
+        border-radius: 16px;
+        padding: 22px 24px;
+        margin-bottom: 24px;
+        border: 1px solid #dbe7ff;
+        background:
+            radial-gradient(560px 180px at -8% -30%, rgba(59, 130, 246, 0.14), transparent 65%),
+            radial-gradient(420px 160px at 110% 0%, rgba(147, 197, 253, 0.22), transparent 68%),
+            #ffffff;
+        box-shadow: 0 12px 30px rgba(37, 99, 235, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 14px;
+        overflow: hidden;
+    }
+
+    .welcome-banner::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #2563eb, #60a5fa, #bfdbfe);
+        opacity: 0.75;
+    }
+
+    .welcome-copy {
+        min-width: 260px;
+        max-width: 780px;
+    }
+
+    .welcome-greeting {
+        font-family: 'DM Serif Display', serif;
+        font-size: clamp(1.45rem, 2.1vw, 2rem);
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        color: #0f172a;
+        margin: 0;
+    }
+
+    .welcome-sub {
+        margin-top: 8px;
+        font-size: 1rem;
+        color: #64748b;
+        line-height: 1.55;
+    }
+
+    .welcome-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 12px;
+        padding: 11px 20px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        text-decoration: none;
+        color: #fff;
+        background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.24);
+        transition: transform 0.16s ease, box-shadow 0.16s ease;
+        white-space: nowrap;
+    }
+
+    .welcome-cta:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 14px 24px rgba(37, 99, 235, 0.3);
+        color: #fff;
+    }
+
+    .stat-cards-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .stat-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+        background: #fff;
+    }
+
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+    .stat-card.active { box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+
+    .stat-card-icon {
+        width: 40px; height: 40px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem; flex-shrink: 0;
+    }
+
+    .stat-card-number { font-size: 1.5rem; font-weight: 700; line-height: 1; }
+    .stat-card-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px; }
+
+    .stat-card-total { border-color: #dbeafe; }
+    .stat-card-total .stat-card-icon { background: #dbeafe; color: #1d4ed8; }
+    .stat-card-total .stat-card-number { color: #1d4ed8; }
+    .stat-card-total .stat-card-label { color: #60a5fa; }
+    .stat-card-total.active { border-color: #93c5fd; background: #eff8ff; }
+
+    .stat-card-generated { border-color: #d1fae5; }
+    .stat-card-generated .stat-card-icon { background: #d1fae5; color: #059669; }
+    .stat-card-generated .stat-card-number { color: #059669; }
+    .stat-card-generated .stat-card-label { color: #34d399; }
+    .stat-card-generated.active { border-color: #6ee7b7; background: #ecfdf5; }
+
+    .stat-card-edited { border-color: #fef3c7; }
+    .stat-card-edited .stat-card-icon { background: #fef3c7; color: #d97706; }
+    .stat-card-edited .stat-card-number { color: #d97706; }
+    .stat-card-edited .stat-card-label { color: #fbbf24; }
+    .stat-card-edited.active { border-color: #fde68a; background: #fffbeb; }
+
+    .stat-card-pending { border-color: #e2e8f0; }
+    .stat-card-pending .stat-card-icon { background: #f1f5f9; color: #94a3b8; }
+    .stat-card-pending .stat-card-number { color: #94a3b8; }
+    .stat-card-pending .stat-card-label { color: #cbd5e1; }
+    .stat-card-pending.active { border-color: #cbd5e1; background: #f8fafc; }
+
+    .report-feed {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .reports-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.8rem;
+        margin: 0.35rem 0 0.8rem;
+        flex-wrap: wrap;
+    }
+
+    .toolbar-left { flex: 1; min-width: 200px; }
+    .toolbar-right { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+
+    .search-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 10px;
+        color: #94a3b8;
+        font-size: 13px;
+        pointer-events: none;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 7px 32px 7px 30px;
+        border: 1px solid #dbe7ff;
+        border-radius: 10px;
+        font-size: 13px;
+        background: #f8fbff;
+        color: #0f172a;
+        outline: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .search-input:focus {
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 3px rgba(147,197,253,0.2);
+        background: #fff;
+    }
+
+    .search-clear {
+        position: absolute;
+        right: 8px;
+        background: none;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 0;
+        line-height: 1;
+    }
+
+    .search-clear:hover { color: #475569; }
+
+    .sort-select {
+        padding: 6px 10px;
+        border: 1px solid #dbe7ff;
+        border-radius: 10px;
+        font-size: 12px;
+        background: #f8fbff;
+        color: #475569;
+        cursor: pointer;
+        outline: none;
+    }
+
+    .sort-select:focus { border-color: #93c5fd; }
+
+    .reports-count {
+        background: #f4f8ff;
+        border: 1px solid var(--dash-border);
+        border-radius: 999px;
+        padding: 4px 10px;
+        white-space: nowrap;
+    }
+
+    .reports-pagination {
+        display: none;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        margin-top: 1rem;
+        padding: 10px 0;
+        border-top: 1px solid #dbe7ff;
+    }
+
+    .page-btn {
+        min-width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        border: 1px solid rgba(147, 197, 253, 0.35);
+        background: #f5f9ff;
+        color: #1d4ed8;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 0 10px;
+        transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    }
+
+    .page-btn:hover:not(:disabled) {
+        background: #e9f1ff;
+        border-color: rgba(96, 165, 250, 0.9);
+        color: #1e3a8a;
+    }
+
+    .page-btn.active {
+        background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 6px 14px rgba(37, 99, 235, 0.34);
+    }
+
+    .page-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+
+    .report-card {
+        border: 1px solid var(--dash-border);
+        border-left: 4px solid #93c5fd;
+        border-radius: 14px;
+        background: var(--dash-card);
+        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.08);
+        padding: 14px 14px 14px 12px;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 12px;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .report-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 16px 34px rgba(37, 99, 235, 0.16);
+    }
+
+    .report-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1e3a8a;
+        background: #e8f1ff;
+    }
+
+    .report-card.generated { border-left-color: #22c55e; }
+    .report-card.edited { border-left-color: #f59e0b; }
+    .report-card.generating { border-left-color: #60a5fa; }
+    .report-card.error { border-left-color: #ef4444; }
+    .report-card.pending { border-left-color: #cbd5e1; }
+
+    .report-card.generated .report-icon { background: #dbeafe; color: #1e3a8a; }
+    .report-card.edited .report-icon { background: #e6f0ff; color: #1d4ed8; }
+    .report-card.generating .report-icon { background: #eef5ff; color: #2563eb; }
+    .report-card.error .report-icon { background: #e0ecff; color: #1d4ed8; }
+    .report-card.pending .report-icon { background: #f1f6ff; color: #3b82f6; }
+
+    .report-main {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .report-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.6rem;
+    }
+
+    .report-title {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--dash-text);
+        line-height: 1.35;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 480px;
+    }
+
+    .report-meta {
+        color: var(--dash-muted);
+        font-size: 12px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    .meta-major {
+        color: #2563eb;
+        font-weight: 600;
+    }
+
+    .report-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+
+    .status-pill {
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+
+    .status-generated { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+    .status-edited    { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+    .status-generating { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; animation: pulseBadge 1.5s ease-in-out infinite; }
+    .status-error     { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+    .status-default   { background: #f1f5f9; color: #475569; border-color: #e2e8f0; }
+
+    @keyframes pulseBadge {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 5px 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid transparent;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background 0.15s ease, border-color 0.15s ease;
+        background: none;
+    }
+
+    .action-view {
+        color: #1d4ed8;
+        background: #eff5ff;
+        border-color: rgba(147, 197, 253, 0.5);
+    }
+
+    .action-view:hover { background: #dbeafe; border-color: #93c5fd; color: #1e3a8a; }
+
+    .action-download {
+        color: #059669;
+        background: #ecfdf5;
+        border-color: rgba(110, 231, 183, 0.5);
+    }
+
+    .action-download:hover { background: #d1fae5; border-color: #6ee7b7; color: #065f46; }
+
+    .action-preview {
+        color: #7c3aed;
+        background: #f5f3ff;
+        border-color: rgba(196, 181, 253, 0.55);
+    }
+
+    .action-preview:hover { background: #ede9fe; border-color: #c4b5fd; color: #5b21b6; }
+
+    .action-delete {
+        color: #dc2626;
+        background: #fef2f2;
+        border-color: rgba(252, 165, 165, 0.5);
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        justify-content: center;
+    }
+
+    .action-delete:hover { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+
+    .skeleton-card {
+        background: var(--dash-card-soft);
+        border-radius: 14px;
+        border: 1px solid var(--dash-border);
+        padding: 20px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .shimmer {
+        background: linear-gradient(90deg, #edf4ff 25%, #dce9ff 50%, #edf4ff 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        border: 1px dashed var(--dash-border);
+        border-radius: 14px;
+        background: var(--dash-card-soft);
+        color: var(--dash-text);
+    }
+
+    .dashboard-shell .dashboard-title,
+    .dashboard-shell .text-muted {
+        color: var(--dash-text) !important;
+    }
+
+    .dashboard-shell .text-muted {
+        opacity: 1;
+        color: #64748b !important;
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-head {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        #welcomeBanner {
+            padding: 16px 16px !important;
+            align-items: flex-start !important;
+        }
+
+        #welcomeBanner > a {
+            width: 100%;
+            justify-content: center;
+        }
+
+        #onboardingCard {
+            padding: 14px 14px !important;
+        }
+
+        .stat-cards-row { grid-template-columns: repeat(2, 1fr); }
+
+        .report-top {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.4rem;
+        }
+
+        .report-actions {
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .report-card {
+            grid-template-columns: 1fr;
+            padding: 12px;
+        }
+
+        .report-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .stat-cards-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .stat-card { padding: 10px 12px; gap: 8px; }
+        .stat-card-number { font-size: 1.2rem; }
+
+        .report-title {
+            font-size: 14px;
+            max-width: 200px;
+            white-space: nowrap;
+        }
+
+        .report-meta {
+            font-size: 11px;
+        }
+
+        .action-view,
+        .action-download,
+        .action-preview {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .skeleton-card {
+            padding: 14px;
+            gap: 10px;
+        }
+
+        .empty-state {
+            padding: 36px 14px;
+        }
+
+        .reports-toolbar { flex-direction: column; align-items: stretch; }
+        .toolbar-right { justify-content: space-between; }
+
+        .welcome-sub {
+            font-size: 0.92rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-shell">
+    <div id="welcomeBanner" class="welcome-banner">
+        <div class="welcome-copy">
+            <h1 id="welcomeGreeting" class="welcome-greeting">Good morning</h1>
+            <div id="welcomeSub" class="welcome-sub">Loading your summary...</div>
+        </div>
+        <a href="/student/create" class="welcome-cta">
+            <i class="bi bi-plus-circle"></i> New Report
+        </a>
+    </div>
+
+    <div id="onboardingCard" style="
+        background: linear-gradient(135deg,#ffffff,#f5f9ff);
+        border: 1px solid #dbe7ff; border-radius: 14px;
+        padding: 18px 20px; margin-bottom: 20px; display:none;
+    ">
+        <div style="display:flex;align-items:center;justify-content:space-between;
+            margin-bottom:14px;">
+            <div style="font-size:14px;font-weight:500;color:#1a1a2e;
+                font-family:'DM Sans',sans-serif;">
+                Setup Guide \u2014 3 steps to your first report
+            </div>
+            <div id="onboardingProgress" style="font-size:12px;color:#1d4ed8;
+                font-weight:500;">0 / 3 done</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;" id="onboardingSteps">
+            <a href="/student/profile" id="ob-step1" style="
+                display:flex;align-items:center;gap:12px;text-decoration:none;
+                padding:10px 12px;border-radius:10px;border:1px solid #dbe7ff;
+                background:#ffffff;transition:background 0.2s;
+            ">
+                <div class="ob-circle" style="width:24px;height:24px;border-radius:50%;
+                    border:2px solid #2563eb;display:flex;align-items:center;
+                    justify-content:center;font-size:11px;color:#2563eb;flex-shrink:0;">1</div>
+                <div>
+                    <div style="font-size:13px;font-weight:500;color:#1a1a2e;">
+                        Complete your profile</div>
+                    <div style="font-size:11px;color:#6b6783;">
+                        Add college, degree, industry details</div>
+                </div>
+                <span style="margin-left:auto;font-size:12px;color:#2563eb;">\u2192</span>
+            </a>
+            <a href="/student/create" id="ob-step2" style="
+                display:flex;align-items:center;gap:12px;text-decoration:none;
+                padding:10px 12px;border-radius:10px;border:1px solid #dbe7ff;
+                background:#ffffff;transition:background 0.2s;
+            ">
+                <div class="ob-circle" style="width:24px;height:24px;border-radius:50%;
+                    border:2px solid #2563eb;display:flex;align-items:center;
+                    justify-content:center;font-size:11px;color:#2563eb;flex-shrink:0;">2</div>
+                <div>
+                    <div style="font-size:13px;font-weight:500;color:#1a1a2e;">
+                        Generate your first report</div>
+                    <div style="font-size:11px;color:#6b6783;">
+                        Draft generation typically completes within 2 minutes</div>
+                </div>
+                <span style="margin-left:auto;font-size:12px;color:#2563eb;">\u2192</span>
+            </a>
+            <div id="ob-step3" style="
+                display:flex;align-items:center;gap:12px;
+                padding:10px 12px;border-radius:10px;border:1px solid #dbe7ff;
+                background:#ffffff;opacity:0.6;
+            ">
+                <div class="ob-circle" style="width:24px;height:24px;border-radius:50%;
+                    border:2px solid #9b97b0;display:flex;align-items:center;
+                    justify-content:center;font-size:11px;color:#9b97b0;flex-shrink:0;">3</div>
+                <div>
+                    <div style="font-size:13px;font-weight:500;color:#1a1a2e;">
+                        Download your PDF</div>
+                    <div style="font-size:11px;color:#6b6783;">
+                        Share with your university</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-head">
+        <div>
+            <h2 class="dashboard-title">My Internship Reports</h2>
+            <p class="text-muted mb-0">Track generated reports, edit sections, and export final PDF.</p>
+        </div>
+    </div>
+
+    <div class="stat-cards-row" id="statCardsRow">
+        <div class="stat-card stat-card-total" id="statCardTotal" data-filter="all">
+            <div class="stat-card-icon"><i class="bi bi-file-earmark-text"></i></div>
+            <div class="stat-card-body">
+                <div class="stat-card-number" id="statTotal">0</div>
+                <div class="stat-card-label">Total</div>
+            </div>
+        </div>
+        <div class="stat-card stat-card-generated" id="statCardGenerated" data-filter="generated">
+            <div class="stat-card-icon"><i class="bi bi-check-circle"></i></div>
+            <div class="stat-card-body">
+                <div class="stat-card-number" id="statGenerated">0</div>
+                <div class="stat-card-label">Generated</div>
+            </div>
+        </div>
+        <div class="stat-card stat-card-edited" id="statCardEdited" data-filter="edited">
+            <div class="stat-card-icon"><i class="bi bi-pencil-square"></i></div>
+            <div class="stat-card-body">
+                <div class="stat-card-number" id="statEdited">0</div>
+                <div class="stat-card-label">Edited</div>
+            </div>
+        </div>
+        <div class="stat-card stat-card-pending" id="statCardPending" data-filter="pending">
+            <div class="stat-card-icon"><i class="bi bi-hourglass-split"></i></div>
+            <div class="stat-card-body">
+                <div class="stat-card-number" id="statPending">0</div>
+                <div class="stat-card-label">Pending</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="profileReminder" class="mb-3"></div>
+
+    <div class="reports-toolbar">
+        <div class="toolbar-left">
+            <div class="search-wrap">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" id="reportSearch" class="search-input"
+                    placeholder="Search reports by title or department...">
+                <button class="search-clear" id="searchClear" style="display:none;" title="Clear search">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+        </div>
+        <div class="toolbar-right">
+            <select id="reportSort" class="sort-select" title="Sort reports">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="az">A → Z</option>
+                <option value="za">Z → A</option>
+            </select>
+            <div class="reports-count" id="reportsCountInfo">0 reports</div>
+        </div>
+    </div>
+
+    <div id="reportsList" class="report-feed">
+        <div class="skeleton-card">
+            <div class="shimmer" style="width:44px; height:44px; border-radius:10px;"></div>
+            <div style="flex:1;">
+                <div class="shimmer" style="height:14px; width:60%; border-radius:6px; margin-bottom:8px;"></div>
+                <div class="shimmer" style="height:11px; width:40%; border-radius:6px;"></div>
+            </div>
+            <div class="shimmer" style="width:80px; height:28px; border-radius:20px;"></div>
+        </div>
+        <div class="skeleton-card">
+            <div class="shimmer" style="width:44px; height:44px; border-radius:10px;"></div>
+            <div style="flex:1;">
+                <div class="shimmer" style="height:14px; width:60%; border-radius:6px; margin-bottom:8px;"></div>
+                <div class="shimmer" style="height:11px; width:40%; border-radius:6px;"></div>
+            </div>
+            <div class="shimmer" style="width:80px; height:28px; border-radius:20px;"></div>
+        </div>
+        <div class="skeleton-card">
+            <div class="shimmer" style="width:44px; height:44px; border-radius:10px;"></div>
+            <div style="flex:1;">
+                <div class="shimmer" style="height:14px; width:60%; border-radius:6px; margin-bottom:8px;"></div>
+                <div class="shimmer" style="height:11px; width:40%; border-radius:6px;"></div>
+            </div>
+            <div class="shimmer" style="width:80px; height:28px; border-radius:20px;"></div>
+        </div>
+    </div>
+
+    <div id="reportsPagination" class="reports-pagination"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const authHeaders = () => token ? { 'Authorization': `Bearer ${token}` } : {};
+    const PAGE_SIZE = 6;
+    const reportState = {
+        allReports: [],
+        page: 1,
+        filter: 'all',
+        search: '',
+        sort: 'newest',
+    };
+
+    function updateWelcomeBanner(reports, userName) {
+        const hour = new Date().getHours();
+        const greeting = hour < 12 ? 'Good morning' :
+                        hour < 17 ? 'Good afternoon' : 'Good evening';
+        const name = userName || 'there';
+        document.getElementById('welcomeGreeting').textContent =
+            `${greeting}, ${name}`;
+
+        const generated = reports.filter(r =>
+            r.status === 'generated' || r.status === 'edited').length;
+        const pending = reports.filter(r =>
+            r.status === 'generating' || r.status === 'pending').length;
+
+        let sub = '';
+        if (reports.length === 0) {
+            sub = 'Create your first internship report.';
+        } else if (pending > 0) {
+            sub = `${pending} report${pending>1?'s are':' is'} being generated right now.`;
+        } else if (generated > 0) {
+            const trueGenerated = reports.filter(r => r.status === 'generated').length;
+            const trueEdited = reports.filter(r => r.status === 'edited').length;
+            sub = `${reports.length} report${reports.length>1?'s':''} total — ${trueGenerated} generated, ${trueEdited} edited.`;
+        } else {
+            sub = `${reports.length} report${reports.length>1?'s':''} in your workspace.`;
+        }
+        document.getElementById('welcomeSub').textContent = sub;
+    }
+
+    function markObStep(id, done) {
+        const el = document.getElementById(id);
+        if (!el || !done) return;
+        el.style.opacity = '1';
+        el.style.background = '#eff5ff';
+        el.style.borderColor = '#bfdbfe';
+        const circle = el.querySelector('.ob-circle');
+        if (circle) {
+            circle.style.background = '#2563eb';
+            circle.style.borderColor = '#2563eb';
+            circle.style.color = '#fff';
+            circle.textContent = '\u2713';
+        }
+    }
+
+    function updateOnboarding(reports, profileCompleted) {
+        const card = document.getElementById('onboardingCard');
+        const hasReports = reports.length > 0;
+        const hasGenerated = reports.some(r =>
+            r.status === 'generated' || r.status === 'edited');
+
+        let doneCount = 0;
+
+        if (profileCompleted) {
+            doneCount++;
+            markObStep('ob-step1', true);
+        }
+        if (hasReports) {
+            doneCount++;
+            markObStep('ob-step2', true);
+        }
+        if (hasGenerated) {
+            doneCount++;
+            markObStep('ob-step3', true);
+        }
+
+        document.getElementById('onboardingProgress').textContent =
+            `${doneCount} / 3 done`;
+
+        if (doneCount === 3) {
+            card.style.display = 'none';
+        } else {
+            card.style.display = 'block';
+        }
+    }
+
+    function animateCards() {
+        document.querySelectorAll('.report-card').forEach((card, i) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(16px)';
+            card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, i * 60);
+        });
+    }
+
+    const getStatusClass = (status) => {
+        if (status === 'generated') return 'status-generated';
+        if (status === 'edited') return 'status-edited';
+        if (status === 'generating') return 'status-generating';
+        if (status === 'error') return 'status-error';
+        return 'status-default';
+    };
+
+    const getStatusKey = (status) => {
+        if (status === 'generated') return 'generated';
+        if (status === 'edited') return 'edited';
+        if (status === 'generating') return 'generating';
+        if (status === 'error') return 'error';
+        return 'pending';
+    };
+
+    const getStatusLabel = (status) => {
+        if (status === 'generated') return 'Generated';
+        if (status === 'edited') return 'Edited';
+        if (status === 'generating') return 'Generating...';
+        if (status === 'error') return 'Error';
+        return 'Pending';
+    };
+
+    const getIcon = (majorName = '') => {
+        const val = String(majorName).toLowerCase();
+        if (val.includes('computer') || val.includes('it') || val.includes('software')) return '<i class="bi bi-laptop"></i>';
+        if (val.includes('mechanical') || val.includes('civil')) return '<i class="bi bi-gear"></i>';
+        if (val.includes('electrical') || val.includes('electronics')) return '<i class="bi bi-lightning-charge"></i>';
+        if (val.includes('commerce') || val.includes('finance')) return '<i class="bi bi-bar-chart"></i>';
+        if (val.includes('science')) return '<i class="bi bi-beaker"></i>';
+        return '<i class="bi bi-journal-text"></i>';
+    };
+
+    function getFilteredReports() {
+        let data = reportState.allReports;
+
+        if (reportState.filter !== 'all') {
+            data = data.filter(r => {
+                if (reportState.filter === 'pending') {
+                    return r.status === 'pending' || r.status === 'generating';
+                }
+                return r.status === reportState.filter;
+            });
+        }
+
+        if (reportState.search.trim()) {
+            const q = reportState.search.toLowerCase();
+            data = data.filter(r =>
+                (r.projectTitle || '').toLowerCase().includes(q) ||
+                (r.major?.name || '').toLowerCase().includes(q) ||
+                (r.degree?.name || '').toLowerCase().includes(q)
+            );
+        }
+
+        data = [...data];
+        if (reportState.sort === 'oldest') {
+            data.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        } else if (reportState.sort === 'az') {
+            data.sort((a, b) => (a.projectTitle || '').localeCompare(b.projectTitle || ''));
+        } else if (reportState.sort === 'za') {
+            data.sort((a, b) => (b.projectTitle || '').localeCompare(a.projectTitle || ''));
+        } else {
+            data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        }
+
+        return data;
+    }
+
+    function renderPagination(totalItems) {
+        const el = document.getElementById('reportsPagination');
+        const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+
+        if (reportState.page > totalPages) {
+            reportState.page = totalPages;
+        }
+
+        if (totalItems <= PAGE_SIZE) {
+            el.style.display = 'none';
+            return;
+        }
+
+        const startIdx = (reportState.page - 1) * PAGE_SIZE;
+        const endIdx = Math.min(startIdx + PAGE_SIZE, totalItems);
+
+        const pageButtons = [];
+        const startPage = Math.max(1, reportState.page - 2);
+        const endPage = Math.min(totalPages, startPage + 4);
+
+        for (let p = startPage; p <= endPage; p++) {
+            pageButtons.push(`
+                <button class="page-btn ${p === reportState.page ? 'active' : ''}" data-page="${p}">${p}</button>
+            `);
+        }
+
+        el.innerHTML = `
+            <span style="font-size:12px;color:#94a3b8;">Showing ${startIdx + 1}–${endIdx} of ${totalItems}</span>
+            <div style="display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;">
+                <button class="page-btn" data-page="prev" ${reportState.page === 1 ? 'disabled' : ''}>
+                    <i class="bi bi-chevron-left"></i> Prev
+                </button>
+                ${pageButtons.join('')}
+                <button class="page-btn" data-page="next" ${reportState.page === totalPages ? 'disabled' : ''}>
+                    Next <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        `;
+        el.style.display = 'flex';
+
+        el.querySelectorAll('button[data-page]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const val = btn.getAttribute('data-page');
+                if (val === 'prev') reportState.page = Math.max(1, reportState.page - 1);
+                else if (val === 'next') reportState.page = Math.min(totalPages, reportState.page + 1);
+                else reportState.page = Number(val) || 1;
+                renderReportsPage();
+            });
+        });
+    }
+
+    function renderReportsPage() {
+        const data = getFilteredReports();
+        const list = document.getElementById('reportsList');
+        const total = data.length;
+        const countInfo = document.getElementById('reportsCountInfo');
+        countInfo.textContent = `${total} report${total === 1 ? '' : 's'}`;
+
+        if (total === 0) {
+            list.innerHTML = `
+                <div class="empty-state">
+                    <div style="font-size:48px; margin-bottom:16px;"><i class="bi bi-journal-text"></i></div>
+                    <div style="font-size:18px; font-weight:600; color:#e8f0ff; margin-bottom:8px;">No reports yet</div>
+                    <div style="font-size:14px; color:#9fb3dc; margin-bottom:24px;">
+                        Generate your first internship report in a few minutes.
+                    </div>
+                    <a href="/student/create" style="
+                      display: inline-flex; align-items: center; gap: 8px;
+                      background: linear-gradient(90deg, #2563eb, #3b82f6);
+                      color: white; text-decoration: none; border-radius: 10px;
+                      padding: 10px 24px; font-size: 14px; font-weight: 500;
+                    ">Create Your First Report</a>
+                </div>
+            `;
+            renderPagination(0);
+            return;
+        }
+
+        const startIdx = (reportState.page - 1) * PAGE_SIZE;
+        const rows = data.slice(startIdx, startIdx + PAGE_SIZE);
+
+        list.innerHTML = rows.map((r) => {
+            const badgeClass = getStatusClass(r.status);
+            const statusKey = getStatusKey(r.status);
+            const statusLabel = getStatusLabel(r.status);
+            const icon = getIcon(r.major?.name || '');
+            const createdAt = r.createdAt
+                ? new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                : '-';
+
+            return `
+            <article class="report-card ${statusKey}" onclick="window.location.href='/student/report/${r._id}'">
+                <div class="report-icon">${icon}</div>
+                <div class="report-main">
+                    <div class="report-top">
+                        <h4 class="report-title" title="${r.projectTitle || 'Untitled Project'}">${r.projectTitle || 'Untitled Project'}</h4>
+                        <span class="status-pill ${badgeClass}">${statusLabel}</span>
+                    </div>
+                    <div class="report-meta">
+                        <span>${r.academicYear || '-'}</span>
+                        <span>·</span>
+                        <span class="meta-major">${r.degree?.name || 'Degree'} / ${r.major?.name || 'Major not selected'}</span>
+                        <span>·</span>
+                        <span>Created: ${createdAt}</span>
+                    </div>
+                    <div class="report-actions">
+                        <a href="/student/report/${r._id}"
+                            class="action-btn action-view"
+                            onclick="event.stopPropagation()"
+                            title="View &amp; Edit report">
+                            <i class="bi bi-pencil-square"></i>
+                            <span>Edit</span>
+                        </a>
+                        <button class="action-btn action-download"
+                            onclick="event.stopPropagation(); downloadReportPdf('${r._id}', '${r.status}')"
+                            title="Download PDF"
+                            ${(r.status !== 'generated' && r.status !== 'edited') ? 'style="opacity:0.4;pointer-events:none;" disabled' : ''}>
+                            <i class="bi bi-file-earmark-pdf"></i>
+                            <span>PDF</span>
+                        </button>
+                        <button class="action-btn action-preview"
+                            onclick="event.stopPropagation(); previewReportPdf('${r._id}', '${r.status}')"
+                            title="Preview PDF"
+                            ${(r.status !== 'generated' && r.status !== 'edited') ? 'style="opacity:0.4;pointer-events:none;" disabled' : ''}>
+                            <i class="bi bi-eye"></i>
+                            <span>Preview</span>
+                        </button>
+                        <button class="action-btn action-delete"
+                            onclick="event.stopPropagation(); deleteReport('${r._id}')"
+                            title="Delete report">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </article>
+            `;
+        }).join('');
+
+        animateCards();
+        renderPagination(total);
+    }
+
+    const loadReports = async () => {
+        try {
+            if (user.role === 'student' && !user.profileCompleted) {
+                document.getElementById('profileReminder').innerHTML = `
+                    <div class="alert alert-warning">
+                        Complete your profile details before creating a final report.
+                        <a href="/student/profile" class="alert-link">Go to profile</a>
+                    </div>
+                `;
+            }
+
+            const res = await fetch('/api/reports/my', {
+                credentials: 'include',
+                headers: authHeaders()
+            });
+            const data = await res.json();
+            const list = document.getElementById('reportsList');
+
+            updateWelcomeBanner(data, user.name);
+            updateOnboarding(data, user.profileCompleted);
+            
+            if (res.status === 401 || res.status === 403) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+                return;
+            }
+
+            const total = data.length;
+            const generated = data.filter(r => r.status === 'generated').length;
+            const edited = data.filter(r => r.status === 'edited').length;
+            const pending = data.filter(r => r.status === 'pending' || r.status === 'generating').length;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statGenerated').textContent = generated;
+            document.getElementById('statEdited').textContent = edited;
+            document.getElementById('statPending').textContent = pending;
+
+            reportState.allReports = data;
+            reportState.page = 1;
+            renderReportsPage();
+        } catch (e) {
+            console.error(e);
+            document.getElementById('statTotal').textContent = '0';
+            document.getElementById('statGenerated').textContent = '0';
+            document.getElementById('statEdited').textContent = '0';
+            document.getElementById('statPending').textContent = '0';
+            document.getElementById('reportsCountInfo').textContent = '0 reports';
+            document.getElementById('reportsList').innerHTML = '<div class="card" style="background:#ffffff;border:1px solid #dbe7ff;"><div class="card-body text-center" style="color:#1d4ed8;">Failed to load reports.</div></div>';
+            document.getElementById('reportsPagination').style.display = 'none';
+        }
+    };
+
+    const deleteReport = async (id) => {
+        const rep = reportState.allReports.find(r => r._id === id);
+        const title = rep ? rep.projectTitle || 'this report' : 'this report';
+        showConfirm(`Delete "<strong>${title}</strong>"? This action cannot be undone.`, async () => {
+            await fetch(`/api/reports/${id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: authHeaders()
+            });
+            showToast('Report deleted.', 'success');
+            loadReports();
+        });
+    };
+
+    const downloadReportPdf = async (id, status) => {
+        if (status !== 'generated' && status !== 'edited') {
+            showToast('PDF is available after report generation completes.', 'warning');
+            return;
+        }
+
+        const rep = reportState.allReports.find(r => r._id === id) || {};
+        const fallbackTitle = String(rep.projectTitle || 'Internship_Report').trim() || 'Internship_Report';
+
+        try {
+            const res = await fetch(`/api/reports/${id}/pdf`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: authHeaders(),
+            });
+
+            if (res.status === 401 || res.status === 403) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+                return;
+            }
+
+            if (!res.ok) {
+                let message = 'Unable to download PDF right now.';
+                try {
+                    const err = await res.json();
+                    if (err && err.message) message = err.message;
+                } catch (_) {
+                    // Ignore parse failures and keep fallback message.
+                }
+                showToast(message, 'error');
+                return;
+            }
+
+            const blob = await res.blob();
+            const disposition = res.headers.get('Content-Disposition') || '';
+
+            let fileName = '';
+            const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+            const asciiMatch = disposition.match(/filename="?([^";]+)"?/i);
+            if (utf8Match && utf8Match[1]) {
+                fileName = decodeURIComponent(utf8Match[1]);
+            } else if (asciiMatch && asciiMatch[1]) {
+                fileName = asciiMatch[1];
+            }
+
+            if (!fileName) {
+                fileName = `${fallbackTitle.replace(/[\\/:*?"<>|]+/g, '_')}.pdf`;
+            }
+
+            const objectUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = objectUrl;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(objectUrl);
+
+            showToast('PDF downloaded successfully.', 'success');
+        } catch (e) {
+            showToast('Unable to download PDF right now.', 'error');
+        }
+    };
+
+    const previewReportPdf = async (id, status) => {
+        if (status !== 'generated' && status !== 'edited') {
+            showToast('PDF preview is available after report generation completes.', 'warning');
+            return;
+        }
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            showToast('Please sign in again.', 'error');
+            window.location.href = '/login';
+            return;
+        }
+
+        const previewUrl = `/api/reports/${id}/pdf?inline=1&token=${encodeURIComponent(token)}`;
+        const isMobile = window.matchMedia('(max-width: 768px)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        if (isMobile) {
+            window.location.assign(previewUrl);
+            return;
+        }
+
+        const previewWindow = window.open(previewUrl, '_blank');
+        if (!previewWindow) {
+            window.location.assign(previewUrl);
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchInput = document.getElementById('reportSearch');
+        const searchClear = document.getElementById('searchClear');
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                reportState.search = searchInput.value;
+                reportState.page = 1;
+                if (searchClear) {
+                    searchClear.style.display = searchInput.value ? 'block' : 'none';
+                }
+                renderReportsPage();
+            });
+        }
+
+        if (searchClear && searchInput) {
+            searchClear.addEventListener('click', () => {
+                searchInput.value = '';
+                reportState.search = '';
+                reportState.page = 1;
+                searchClear.style.display = 'none';
+                renderReportsPage();
+                searchInput.focus();
+            });
+        }
+
+        const sortSelect = document.getElementById('reportSort');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', () => {
+                reportState.sort = sortSelect.value;
+                reportState.page = 1;
+                renderReportsPage();
+            });
+        }
+
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const filter = card.dataset.filter || 'all';
+                reportState.filter = reportState.filter === filter ? 'all' : filter;
+                reportState.page = 1;
+                document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+                if (reportState.filter !== 'all') {
+                    card.classList.add('active');
+                }
+                renderReportsPage();
+            });
+        });
+
+        loadReports();
+    });
+</script>
+{% endblock %}

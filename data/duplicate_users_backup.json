@@ -1,0 +1,76 @@
+[
+  {
+    "email": "jeel@gmail.com",
+    "keptId": "30bb656be3271e1f371c06a5",
+    "removedId": "f9dc81337abd0e588cb36b23",
+    "removedDoc": {
+      "id": "f9dc81337abd0e588cb36b23",
+      "data": {
+        "email": "jeel@gmail.com",
+        "password": "$2b$12$BHXV0I1IKVW9bOtFxckG8eb3ixorl5aZ1qtPRhC8s4I7RmjbSFqS6",
+        "role": "student",
+        "isActive": true,
+        "name": "Jeel",
+        "villageCityName": "",
+        "tehsil": "",
+        "district": "",
+        "state": "",
+        "phone": "",
+        "whatsapp": "",
+        "university": null,
+        "college": null,
+        "degree": null,
+        "major": null,
+        "rollNumber": "",
+        "enrollmentNumber": "",
+        "industry": null,
+        "supervisorName": "",
+        "supervisorContact": "",
+        "profileCompleted": false,
+        "resetOtpHash": null,
+        "resetOtpExpiresAt": null,
+        "resetOtpAttemptCount": 0,
+        "createdAt": "2026-04-14T12:12:40.661576",
+        "updatedAt": "2026-04-14T12:12:40.897326"
+      },
+      "updated_at": "2026-04-14T12:12:40.898330"
+    }
+  },
+  {
+    "email": "jeel@gmail.com",
+    "keptId": "30bb656be3271e1f371c06a5",
+    "removedId": "bd8ac1ed2eba48fd1fd6af43",
+    "removedDoc": {
+      "id": "bd8ac1ed2eba48fd1fd6af43",
+      "data": {
+        "email": "jeel@gmail.com",
+        "password": "$2b$12$1.RxhLk/dptszkQquEONS.JPnGjbQYXnKFRyT5152tC5AAvNAR7Ny",
+        "role": "student",
+        "isActive": true,
+        "name": "Jeel",
+        "villageCityName": "",
+        "tehsil": "",
+        "district": "",
+        "state": "",
+        "phone": "",
+        "whatsapp": "",
+        "university": null,
+        "college": null,
+        "degree": null,
+        "major": null,
+        "rollNumber": "",
+        "enrollmentNumber": "",
+        "industry": null,
+        "supervisorName": "",
+        "supervisorContact": "",
+        "profileCompleted": false,
+        "resetOtpHash": null,
+        "resetOtpExpiresAt": null,
+        "resetOtpAttemptCount": 0,
+        "createdAt": "2026-04-14T12:13:16.621617",
+        "updatedAt": "2026-04-14T12:13:16.855234"
+      },
+      "updated_at": "2026-04-14T12:13:16.855234"
+    }
+  }
+]

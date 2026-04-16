@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Industries{% endblock %}
+
+{% block extra_css %}
+{% include 'partials/admin_dark_theme.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+  <div class="col-md-6"><h3>Manage Industries</h3></div>
+  <div class="col-md-6 text-end"><button class="btn btn-outline-primary" onclick="load()">Refresh</button></div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <h6>Merge Industries</h6>
+    <div class="row g-2">
+      <div class="col-md-5"><input id="sourceId" class="form-control" placeholder="Source ID"></div>
+      <div class="col-md-5"><input id="targetId" class="form-control" placeholder="Target ID"></div>
+      <div class="col-md-2 d-grid"><button class="btn btn-warning" onclick="merge()">Merge</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body table-responsive">
+    <table class="table table-striped align-middle">
+      <thead><tr><th>Name</th><th>State</th><th>Actions</th></tr></thead>
+      <tbody id="rows"><tr><td colspan="3" class="text-center">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const token = localStorage.getItem('token');
+if (!token) location.href = '/login';
+const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+async function load() {
+  const res = await fetch('/api/admin/industries', { headers });
+  const data = await res.json();
+  document.getElementById('rows').innerHTML = (data || []).map(i => `
+    <tr>
+      <td><small class="text-muted">${i._id}</small><br>${i.name}</td>
+      <td>${i.state || '-'}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-warning" onclick='edit(${JSON.stringify(i)})'>Edit</button>
+        <button class="btn btn-sm btn-outline-danger" onclick='del("${i._id}")'>Delete</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="3" class="text-center">No data</td></tr>';
+}
+
+async function edit(i) {
+  const name = prompt('Industry name', i.name || '');
+  if (!name) return;
+  const logo = prompt('Industry logo path/url', i.logo || '');
+  await fetch(`/api/admin/industries/${i._id}`, { method: 'PUT', headers, body: JSON.stringify({ name, logo: logo || '' }) });
+  load();
+}
+
+async function del(id) {
+  if (!confirm('Delete industry?')) return;
+  await fetch(`/api/admin/industries/${id}`, { method: 'DELETE', headers });
+  load();
+}
+
+async function merge() {
+  const sourceId = document.getElementById('sourceId').value.trim();
+  const targetId = document.getElementById('targetId').value.trim();
+  if (!sourceId || !targetId) return;
+  await fetch('/api/admin/industries/merge', { method: 'POST', headers, body: JSON.stringify({ sourceId, targetId }) });
+  load();
+}
+
+document.addEventListener('DOMContentLoaded', load);
+</script>
+{% endblock %}

@@ -1,0 +1,946 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - Anti-Report{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background:
+            radial-gradient(1100px 420px at -10% -20%, rgba(59, 130, 246, 0.16), transparent 62%),
+            radial-gradient(980px 360px at 110% -16%, rgba(147, 197, 253, 0.25), transparent 58%),
+            linear-gradient(180deg, #f6f9ff 0%, #eef4ff 100%);
+        color: #0f172a;
+    }
+
+    .profile-shell {
+        --pf-card: #ffffff;
+        --pf-input: #f8fbff;
+        --pf-border: #d7e5ff;
+        --pf-text: #0f172a;
+        --pf-muted: #64748b;
+        animation: profileIn 0.35s ease both;
+    }
+
+    @keyframes profileIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .profile-shell h2,
+    .profile-shell .card-title {
+        color: var(--pf-text);
+        font-family: 'Playfair Display', serif;
+        letter-spacing: -0.01em;
+    }
+
+    .profile-shell .text-muted {
+        color: var(--pf-muted) !important;
+    }
+
+    .profile-shell .nav-pills .nav-link {
+        border-radius: 999px;
+        color: #2563eb;
+        border: 1px solid #cfe0ff;
+        background: #eef5ff;
+        font-weight: 600;
+        padding: 0.52rem 1.1rem;
+        font-size: 0.88rem;
+        transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .profile-shell .nav-pills .nav-link:hover:not(.active) {
+        background: #dbeafe;
+        border-color: #93c5fd;
+        color: #1e40af;
+    }
+
+    .profile-shell .nav-pills .nav-link.active {
+        background: linear-gradient(90deg, #2563eb, #3b82f6);
+        border-color: rgba(96, 165, 250, 0.9);
+        color: #ffffff;
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+    }
+
+    .profile-shell .card {
+        border: 1px solid var(--pf-border) !important;
+        border-radius: 16px;
+        background: var(--pf-card);
+        box-shadow: 0 12px 30px rgba(37, 99, 235, 0.08);
+    }
+
+    .profile-shell .form-label {
+        color: #64748b;
+        font-size: 0.82rem;
+        font-weight: 700;
+    }
+
+    .profile-shell .form-control,
+    .profile-shell .form-select {
+        background: var(--pf-input);
+        border: 1.5px solid #dbe7ff;
+        color: #0f172a;
+        min-height: 46px;
+        border-radius: 10px;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    .profile-shell .form-control::placeholder {
+        color: #94a3b8;
+    }
+
+    .profile-shell .form-control:focus,
+    .profile-shell .form-select:focus {
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        background: #ffffff;
+        color: #0f172a;
+        outline: none;
+    }
+
+    .profile-shell .form-select option {
+        background: #ffffff;
+        color: #0f172a;
+    }
+
+    .profile-shell .text-danger { color: #f87171 !important; }
+
+    .profile-shell .input-group .btn,
+    .profile-shell .btn-outline-primary,
+    .profile-shell .btn-outline-secondary {
+        border-color: #bfdbfe;
+        color: #1d4ed8;
+        background: #eff6ff;
+    }
+
+    .profile-shell .btn-primary,
+    .profile-shell .btn-success {
+        border: 0;
+        border-radius: 12px;
+        font-weight: 700;
+        padding: 0.62rem 1.15rem;
+        background: linear-gradient(90deg, #2563eb, #3b82f6);
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.35);
+    }
+
+    .profile-shell .btn-primary:hover,
+    .profile-shell .btn-success:hover {
+        background: linear-gradient(90deg, #1d4ed8, #2563eb);
+        color: #fff;
+    }
+
+    .profile-shell .alert {
+        border-radius: 12px;
+    }
+
+    .tab-content .tab-pane {
+        animation: none;
+    }
+
+    .tab-content .tab-pane.show.active {
+        animation: tabFadeIn 0.22s ease both;
+    }
+
+    @keyframes tabFadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .profile-header-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 20px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+
+    .profile-avatar {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #1d4ed8, #60a5fa);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #fff;
+        flex-shrink: 0;
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+        border: 3px solid rgba(96, 165, 250, 0.45);
+        user-select: none;
+    }
+
+    .profile-header-copy { flex: 1; min-width: 240px; }
+    .profile-completion-bar-wrap { margin-top: 10px; }
+
+    .profile-completion-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+    }
+
+    .profile-completion-track {
+        height: 6px;
+        background: #dbeafe;
+        border-radius: 999px;
+        overflow: hidden;
+        margin-bottom: 8px;
+    }
+
+    .profile-completion-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #1d4ed8, #60a5fa);
+        border-radius: 999px;
+        transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .profile-completion-sections {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .comp-section-badge {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+    }
+
+    .comp-complete {
+        background: rgba(5, 150, 105, 0.15);
+        border-color: rgba(52, 211, 153, 0.4);
+        color: #34d399;
+    }
+
+    .comp-incomplete {
+        background: #f1f5f9;
+        border-color: #e2e8f0;
+        color: #64748b;
+    }
+
+    .form-save-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding-top: 8px;
+        border-top: 1px solid #dbe7ff;
+        margin-top: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-save-main {
+        min-width: 180px;
+        padding: 0.65rem 1.4rem !important;
+        font-size: 0.9rem !important;
+    }
+
+    .btn-discard {
+        background: none;
+        border: none;
+        color: #64748b;
+        font-size: 13px;
+        cursor: pointer;
+        padding: 0.65rem 0.5rem;
+        text-decoration: underline;
+        text-decoration-color: transparent;
+        transition: color 0.15s ease, text-decoration-color 0.15s ease;
+    }
+
+    .btn-discard:hover {
+        color: #1d4ed8;
+        text-decoration-color: currentColor;
+    }
+
+    @media (max-width: 576px) {
+        .profile-header-row { flex-direction: column; align-items: center; text-align: center; }
+        .profile-completion-sections { justify-content: center; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-shell">
+<div class="profile-header-row">
+    <div class="profile-avatar" id="profileAvatar">J</div>
+    <div class="profile-header-copy">
+        <h2 class="mb-1" id="profilePageTitle">My Profile</h2>
+        <p class="text-muted mb-1">Complete all details before generating your final internship report.</p>
+        <div class="profile-completion-bar-wrap">
+            <div class="profile-completion-labels">
+                <span id="completionText" style="font-size:12px;color:#9fb3dc;">Loading...</span>
+                <span id="completionPct" style="font-size:12px;font-weight:700;color:#60a5fa;">0%</span>
+            </div>
+            <div class="profile-completion-track">
+                <div class="profile-completion-fill" id="completionFill" style="width:0%"></div>
+            </div>
+            <div class="profile-completion-sections">
+                <span id="compPersonal" class="comp-section-badge comp-incomplete">○ Personal</span>
+                <span id="compCollege" class="comp-section-badge comp-incomplete">○ College</span>
+                <span id="compIndustry" class="comp-section-badge comp-incomplete">○ Industry</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="profileAlert" class="alert d-none" role="alert"></div>
+
+<ul class="nav nav-pills mb-4" id="profileTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="personal-tab"
+            data-bs-toggle="pill" data-bs-target="#personal-pane" type="button">
+            <i class="bi bi-person me-1"></i>
+            Personal
+            <span class="tab-status-icon" id="tabStatusPersonal" style="margin-left:5px;font-size:11px;"></span>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="college-tab"
+            data-bs-toggle="pill" data-bs-target="#college-pane" type="button">
+            <i class="bi bi-mortarboard me-1"></i>
+            College
+            <span class="tab-status-icon" id="tabStatusCollege" style="margin-left:5px;font-size:11px;"></span>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="industry-tab"
+            data-bs-toggle="pill" data-bs-target="#industry-pane" type="button">
+            <i class="bi bi-briefcase me-1"></i>
+            Industry
+            <span class="tab-status-icon" id="tabStatusIndustry" style="margin-left:5px;font-size:11px;"></span>
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="profileTabsContent">
+    <div class="tab-pane fade show active" id="personal-pane" role="tabpanel" aria-labelledby="personal-tab">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Personal Details</h5>
+                <form id="personalForm" class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="personalName">Full Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="personalName"
+                            placeholder="Enter your full name"
+                            autocomplete="name" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="personalPhone">Phone Number <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" id="personalPhone"
+                            placeholder="10-digit mobile number"
+                            inputmode="tel" maxlength="10" autocomplete="tel">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="personalWhatsapp">WhatsApp Number</label>
+                        <input type="tel" class="form-control" id="personalWhatsapp"
+                            placeholder="WhatsApp number (if different from phone)"
+                            inputmode="tel" maxlength="10">
+                        <div style="margin-top:6px;display:flex;align-items:center;gap:8px;">
+                            <input type="checkbox" id="whatsappSameAsPhone" style="cursor:pointer;">
+                            <label for="whatsappSameAsPhone" style="font-size:12px;color:#9fb3dc;cursor:pointer;margin:0;">
+                                Same as phone number
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="personalCity">Village / City <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="personalCity"
+                            placeholder="Enter your village or city"
+                            autocomplete="address-level2">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="personalTehsil">Tehsil</label>
+                        <input type="text" class="form-control" id="personalTehsil"
+                            placeholder="Your sub-district or taluka">
+                        <small style="color:#9fb3dc;font-size:11px;">Sub-district or taluka</small>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="personalDistrict">District <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="personalDistrict"
+                            placeholder="Enter your district"
+                            autocomplete="address-level1">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="personalState">State <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="personalState"
+                            placeholder="E.g. Gujarat"
+                            autocomplete="address-level1">
+                    </div>
+                    <div class="col-12">
+                        <div class="form-save-bar">
+                        <button type="submit" class="btn btn-primary btn-save-main" id="savePersonalBtn">
+                            <i class="bi bi-check2 me-1"></i> Save Personal Details
+                        </button>
+                        <button type="button" class="btn-discard" id="discardPersonalBtn">
+                            Discard changes
+                        </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="college-pane" role="tabpanel" aria-labelledby="college-tab">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h5 class="card-title mb-3">College Details</h5>
+                <form id="collegeForm" class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label" for="collegeUniversity">University</label>
+                        <select class="form-select" id="collegeUniversity"></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Add University</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="newUniversity" placeholder="New university">
+                            <button type="button" class="btn btn-outline-primary" id="addUniversityBtn">Add</button>
+                        </div>
+                    </div>
+
+                    <div class="col-md-8">
+                        <label class="form-label" for="collegeCollege">College</label>
+                        <select class="form-select" id="collegeCollege"></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Add College</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="newCollege" placeholder="New college">
+                            <button type="button" class="btn btn-outline-primary" id="addCollegeBtn">Add</button>
+                        </div>
+                        <div class="mt-2 d-flex gap-2 align-items-center">
+                            <input type="file" class="form-control form-control-sm" id="newCollegeLogoFile" accept="image/*">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="uploadCollegeLogoBtn">Upload Logo</button>
+                        </div>
+                        <small id="newCollegeLogoHint" class="text-muted"></small>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label" for="collegeDegree">Degree</label>
+                        <select class="form-select" id="collegeDegree"></select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="collegeMajor">Major</label>
+                        <select class="form-select" id="collegeMajor"></select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label" for="collegeRollNumber">Roll Number</label>
+                        <input type="text" class="form-control" id="collegeRollNumber" placeholder="Your university roll number" autocomplete="off">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="collegeEnrollmentNumber">Enrollment Number</label>
+                        <input type="text" class="form-control" id="collegeEnrollmentNumber" placeholder="Your enrollment/admission number" autocomplete="off">
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-save-bar">
+                        <button type="submit" class="btn btn-primary btn-save-main" id="saveCollegeBtn">
+                            <i class="bi bi-check2 me-1"></i> Save College Details
+                        </button>
+                        <button type="button" class="btn-discard" id="discardCollegeBtn">
+                            Discard changes
+                        </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="industry-pane" role="tabpanel" aria-labelledby="industry-tab">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Industry Details</h5>
+                <form id="industryForm" class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label" for="industrySelect">Industry/Company</label>
+                        <select class="form-select" id="industrySelect"></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Add Industry</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="newIndustry" placeholder="New industry">
+                            <button type="button" class="btn btn-outline-primary" id="addIndustryBtn">Add</button>
+                        </div>
+                        <div class="mt-2 d-flex gap-2 align-items-center">
+                            <input type="file" class="form-control form-control-sm" id="newIndustryLogoFile" accept="image/*">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="uploadIndustryLogoBtn">Upload Logo</button>
+                        </div>
+                        <small id="newIndustryLogoHint" class="text-muted"></small>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label" for="industrySupervisorName">Supervisor Name</label>
+                        <input type="text" class="form-control" id="industrySupervisorName" placeholder="Name of your internship supervisor" autocomplete="name">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="industrySupervisorContact">Supervisor Contact</label>
+                        <input type="text" class="form-control" id="industrySupervisorContact" placeholder="Supervisor email or phone number" autocomplete="off">
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-save-bar">
+                        <button type="submit" class="btn btn-primary btn-save-main" id="saveIndustryBtn">
+                            <i class="bi bi-check2 me-1"></i> Save Industry Details
+                        </button>
+                        <button type="button" class="btn-discard" id="discardIndustryBtn">
+                            Discard changes
+                        </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = '/login';
+
+    const authHeaders = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+    };
+
+    let profile = null;
+    let degrees = [];
+    let majors = [];
+    let universities = [];
+    let colleges = [];
+    let industries = [];
+    let newCollegeLogoPath = '';
+    let newIndustryLogoPath = '';
+    let unsavedChanges = false;
+
+    function markUnsaved() {
+        unsavedChanges = true;
+    }
+
+    function markSaved() {
+        unsavedChanges = false;
+    }
+
+    function toTitleCase(str) {
+        if (!str) return '';
+        return str.trim().replace(/\w\S*/g, txt =>
+            txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+        );
+    }
+
+    function showAlert(type, text) {
+        const box = document.getElementById('profileAlert');
+        box.className = `alert alert-${type}`;
+        box.textContent = text;
+        box.classList.remove('d-none');
+        setTimeout(() => box.classList.add('d-none'), 3500);
+    }
+
+    window.addEventListener('beforeunload', (e) => {
+        if (unsavedChanges) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+
+    function setSelectOptions(selectId, items, valueField, labelField, placeholder, selectedValue = '') {
+        const select = document.getElementById(selectId);
+        const options = [`<option value="">${placeholder}</option>`];
+        items.forEach(item => {
+            const selected = String(selectedValue) === String(item[valueField]) ? 'selected' : '';
+            options.push(`<option value="${item[valueField]}" ${selected}>${item[labelField]}</option>`);
+        });
+        select.innerHTML = options.join('');
+    }
+
+    async function apiGet(url) {
+        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!res.ok) throw new Error('API error');
+        return res.json();
+    }
+
+    async function uploadLogo(type, fileInputId, hintId) {
+        const fileInput = document.getElementById(fileInputId);
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) {
+            showAlert('warning', 'Please select an image first');
+            return '';
+        }
+
+        const fd = new FormData();
+        fd.append('logo', file);
+        const res = await fetch(`/api/upload/logo/${type}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: fd
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Logo upload failed');
+
+        const hint = document.getElementById(hintId);
+        hint.textContent = `Logo uploaded: ${data.path}`;
+        return data.path;
+    }
+
+    async function loadMajors(degreeId, selectedMajor = '') {
+        majors = degreeId ? await apiGet(`/api/student/majors/${degreeId}`) : [];
+        setSelectOptions('collegeMajor', majors, '_id', 'name', 'Select major', selectedMajor);
+    }
+
+    async function loadColleges(universityId, selectedCollege = '') {
+        colleges = universityId ? await apiGet(`/api/student/colleges?university=${encodeURIComponent(universityId)}`) : [];
+        setSelectOptions('collegeCollege', colleges, '_id', 'name', 'Select college', selectedCollege);
+    }
+
+    function updateCompletionIndicator(profileData) {
+        const name = profileData.name || '';
+        const initial = name.trim().charAt(0).toUpperCase() || 'U';
+        const avatarEl = document.getElementById('profileAvatar');
+        if (avatarEl) avatarEl.textContent = initial;
+
+        const personalDone = !!(profileData.name && profileData.phone && profileData.villageCityName && profileData.district && profileData.state);
+        const collegeDone = !!(profileData.college && profileData.degree && profileData.major);
+        const industryDone = !!(profileData.industry);
+
+        const pEl = document.getElementById('compPersonal');
+        const cEl = document.getElementById('compCollege');
+        const iEl = document.getElementById('compIndustry');
+
+        if (pEl) {
+            pEl.textContent = personalDone ? '✓ Personal' : '○ Personal';
+            pEl.className = 'comp-section-badge ' + (personalDone ? 'comp-complete' : 'comp-incomplete');
+        }
+        if (cEl) {
+            cEl.textContent = collegeDone ? '✓ College' : '○ College';
+            cEl.className = 'comp-section-badge ' + (collegeDone ? 'comp-complete' : 'comp-incomplete');
+        }
+        if (iEl) {
+            iEl.textContent = industryDone ? '✓ Industry' : '○ Industry';
+            iEl.className = 'comp-section-badge ' + (industryDone ? 'comp-complete' : 'comp-incomplete');
+        }
+
+        const score = [personalDone, collegeDone, industryDone].filter(Boolean).length;
+        const pct = Math.round((score / 3) * 100);
+
+        const fillEl = document.getElementById('completionFill');
+        const pctEl = document.getElementById('completionPct');
+        const textEl = document.getElementById('completionText');
+
+        if (fillEl) fillEl.style.width = pct + '%';
+        if (pctEl) pctEl.textContent = pct + '%';
+        if (textEl) {
+            if (pct === 100) textEl.textContent = 'Profile complete 🎉';
+            else if (pct === 0) textEl.textContent = 'Profile not started';
+            else textEl.textContent = `Profile ${pct}% complete`;
+        }
+
+        const tabIcons = [
+            { id: 'tabStatusPersonal', done: personalDone },
+            { id: 'tabStatusCollege', done: collegeDone },
+            { id: 'tabStatusIndustry', done: industryDone },
+        ];
+        tabIcons.forEach(({ id, done }) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = done ? '✓' : '';
+                el.style.color = done ? '#34d399' : '#f59e0b';
+            }
+        });
+    }
+
+    async function loadBootstrapData() {
+        const [profileData, degreeData, universityData, industryData] = await Promise.all([
+            apiGet('/api/student/profile'),
+            apiGet('/api/student/degrees'),
+            apiGet('/api/student/universities'),
+            apiGet('/api/student/industries')
+        ]);
+
+        profile = profileData;
+        degrees = degreeData;
+        universities = universityData;
+        industries = industryData;
+
+        document.getElementById('personalName').value = profile.name || '';
+        document.getElementById('personalPhone').value = profile.phone || '';
+        document.getElementById('personalWhatsapp').value = profile.whatsapp || '';
+        document.getElementById('personalCity').value = profile.villageCityName || '';
+        document.getElementById('personalTehsil').value = profile.tehsil || '';
+        document.getElementById('personalDistrict').value = profile.district || '';
+        document.getElementById('personalState').value = profile.state || '';
+
+        setSelectOptions('collegeUniversity', universities, '_id', 'name', 'Select university', profile.university?._id || '');
+        setSelectOptions('collegeDegree', degrees, '_id', 'name', 'Select degree', profile.degree?._id || '');
+        setSelectOptions('industrySelect', industries, '_id', 'name', 'Select industry', profile.industry?._id || '');
+
+        document.getElementById('collegeRollNumber').value = profile.rollNumber || '';
+        document.getElementById('collegeEnrollmentNumber').value = profile.enrollmentNumber || '';
+        document.getElementById('industrySupervisorName').value = profile.supervisorName || '';
+        document.getElementById('industrySupervisorContact').value = profile.supervisorContact || '';
+
+        await loadMajors(profile.degree?._id || '', profile.major?._id || '');
+        await loadColleges(profile.university?._id || '', profile.college?._id || '');
+        updateCompletionIndicator(profile);
+    }
+
+    async function saveProfileSection(url, payload, successMsg, btnId, successRedirect = false) {
+        const btn = document.getElementById(btnId);
+        const originalHTML = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;"><span class="spinner-border spinner-border-sm" role="status"></span> Saving...</span>';
+
+        try {
+            const res = await fetch(url, {
+                method: 'PUT',
+                headers: authHeaders,
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                showAlert('danger', data.message || 'Save failed');
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                return;
+            }
+
+            btn.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Saved!';
+            btn.style.background = 'linear-gradient(90deg, #059669, #10b981)';
+            showToast(successMsg, 'success');
+            markSaved();
+
+            try {
+                const freshProfile = await apiGet('/api/student/profile');
+                updateCompletionIndicator(freshProfile);
+            } catch (_) {}
+
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.style.background = '';
+                btn.disabled = false;
+            }, 2000);
+
+            if (successRedirect) {
+                const userRaw = localStorage.getItem('user');
+                if (userRaw) {
+                    const user = JSON.parse(userRaw);
+                    user.profileCompleted = true;
+                    localStorage.setItem('user', JSON.stringify(user));
+                }
+            }
+        } catch (e) {
+            showAlert('danger', 'Network error while saving');
+            btn.innerHTML = originalHTML;
+            btn.disabled = false;
+        }
+    }
+
+    document.getElementById('collegeUniversity').addEventListener('change', async (e) => {
+        await loadColleges(e.target.value, '');
+    });
+
+    document.getElementById('collegeDegree').addEventListener('change', async (e) => {
+        await loadMajors(e.target.value, '');
+    });
+
+    document.getElementById('addUniversityBtn').addEventListener('click', async () => {
+        const input = document.getElementById('newUniversity');
+        const name = input.value.trim();
+        if (!name) return;
+
+        try {
+            const res = await fetch('/api/student/universities', {
+                method: 'POST',
+                headers: authHeaders,
+                body: JSON.stringify({ name })
+            });
+            const university = await res.json();
+            if (!res.ok) {
+                showAlert('danger', university.message || 'Unable to add university');
+                return;
+            }
+
+            input.value = '';
+            universities = await apiGet('/api/student/universities');
+            setSelectOptions('collegeUniversity', universities, '_id', 'name', 'Select university', university._id);
+            await loadColleges(university._id, '');
+            showAlert('success', 'University added');
+        } catch (e) {
+            showAlert('danger', 'Unable to add university');
+        }
+    });
+
+    document.getElementById('addCollegeBtn').addEventListener('click', async () => {
+        const name = document.getElementById('newCollege').value.trim();
+        const university = document.getElementById('collegeUniversity').value;
+        if (!name || !university) {
+            showAlert('warning', 'Select university first and enter college name');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/student/colleges', {
+                method: 'POST',
+                headers: authHeaders,
+                body: JSON.stringify({ name, university, logo: newCollegeLogoPath })
+            });
+            const college = await res.json();
+            if (!res.ok) {
+                showAlert('danger', college.message || 'Unable to add college');
+                return;
+            }
+
+            document.getElementById('newCollege').value = '';
+            document.getElementById('newCollegeLogoFile').value = '';
+            document.getElementById('newCollegeLogoHint').textContent = '';
+            newCollegeLogoPath = '';
+            await loadColleges(university, college._id);
+            showAlert('success', 'College added');
+        } catch (e) {
+            showAlert('danger', 'Unable to add college');
+        }
+    });
+
+    document.getElementById('addIndustryBtn').addEventListener('click', async () => {
+        const name = document.getElementById('newIndustry').value.trim();
+        if (!name) return;
+
+        try {
+            const res = await fetch('/api/student/industries', {
+                method: 'POST',
+                headers: authHeaders,
+                body: JSON.stringify({ name, logo: newIndustryLogoPath })
+            });
+            const industry = await res.json();
+            if (!res.ok) {
+                showAlert('danger', industry.message || 'Unable to add industry');
+                return;
+            }
+
+            document.getElementById('newIndustry').value = '';
+            document.getElementById('newIndustryLogoFile').value = '';
+            document.getElementById('newIndustryLogoHint').textContent = '';
+            newIndustryLogoPath = '';
+            industries = await apiGet('/api/student/industries');
+            setSelectOptions('industrySelect', industries, '_id', 'name', 'Select industry', industry._id);
+            showAlert('success', 'Industry added');
+        } catch (e) {
+            showAlert('danger', 'Unable to add industry');
+        }
+    });
+
+    document.querySelectorAll('#profileTabs .nav-link').forEach(tabBtn => {
+        tabBtn.addEventListener('click', (e) => {
+            if (unsavedChanges) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                showConfirm('You have unsaved changes. Leave this tab without saving?', () => {
+                    markSaved();
+                    tabBtn.click();
+                });
+            }
+        }, true);
+    });
+
+    document.getElementById('personalForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveProfileSection('/api/student/profile/personal', {
+            name: toTitleCase(document.getElementById('personalName').value),
+            phone: document.getElementById('personalPhone').value.trim(),
+            whatsapp: document.getElementById('personalWhatsapp').value.trim(),
+            villageCityName: toTitleCase(document.getElementById('personalCity').value),
+            tehsil: toTitleCase(document.getElementById('personalTehsil').value),
+            district: toTitleCase(document.getElementById('personalDistrict').value),
+            state: toTitleCase(document.getElementById('personalState').value)
+        }, 'Personal details saved', 'savePersonalBtn');
+    });
+
+    document.getElementById('whatsappSameAsPhone').addEventListener('change', function() {
+        const whatsappField = document.getElementById('personalWhatsapp');
+        if (this.checked) {
+            whatsappField.value = document.getElementById('personalPhone').value;
+            whatsappField.disabled = true;
+            whatsappField.style.opacity = '0.6';
+        } else {
+            whatsappField.disabled = false;
+            whatsappField.style.opacity = '1';
+        }
+    });
+
+    document.getElementById('personalPhone').addEventListener('input', function() {
+        if (document.getElementById('whatsappSameAsPhone').checked) {
+            document.getElementById('personalWhatsapp').value = this.value;
+        }
+    });
+
+    document.getElementById('collegeForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveProfileSection('/api/student/profile/college', {
+            university: document.getElementById('collegeUniversity').value,
+            college: document.getElementById('collegeCollege').value,
+            degree: document.getElementById('collegeDegree').value,
+            major: document.getElementById('collegeMajor').value,
+            rollNumber: document.getElementById('collegeRollNumber').value,
+            enrollmentNumber: document.getElementById('collegeEnrollmentNumber').value
+        }, 'College details saved', 'saveCollegeBtn');
+    });
+
+    document.getElementById('industryForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveProfileSection('/api/student/profile/industry', {
+            industry: document.getElementById('industrySelect').value,
+            supervisorName: document.getElementById('industrySupervisorName').value,
+            supervisorContact: document.getElementById('industrySupervisorContact').value
+        }, 'Industry details saved. Profile completed', 'saveIndustryBtn', true);
+    });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            document.getElementById('uploadCollegeLogoBtn').addEventListener('click', async () => {
+                try {
+                    newCollegeLogoPath = await uploadLogo('college', 'newCollegeLogoFile', 'newCollegeLogoHint');
+                    showAlert('success', 'College logo uploaded');
+                } catch (e) {
+                    showAlert('danger', e.message || 'College logo upload failed');
+                }
+            });
+
+            document.getElementById('uploadIndustryLogoBtn').addEventListener('click', async () => {
+                try {
+                    newIndustryLogoPath = await uploadLogo('industry', 'newIndustryLogoFile', 'newIndustryLogoHint');
+                    showAlert('success', 'Industry logo uploaded');
+                } catch (e) {
+                    showAlert('danger', e.message || 'Industry logo upload failed');
+                }
+            });
+
+            await loadBootstrapData();
+            markSaved();
+
+            ['personalForm', 'collegeForm', 'industryForm'].forEach(formId => {
+                const form = document.getElementById(formId);
+                if (form) {
+                    form.addEventListener('input', markUnsaved);
+                    form.addEventListener('change', markUnsaved);
+                }
+            });
+
+            ['discardPersonalBtn', 'discardCollegeBtn', 'discardIndustryBtn'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.addEventListener('click', async () => {
+                    await loadBootstrapData();
+                    markSaved();
+                    showToast('Changes discarded.', 'info');
+                });
+            });
+        } catch (e) {
+            showAlert('danger', 'Unable to load profile data');
+        }
+    });
+</script>
+{% endblock %}

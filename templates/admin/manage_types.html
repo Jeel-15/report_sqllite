@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Internship Types{% endblock %}
+
+{% block extra_css %}
+{% include 'partials/admin_dark_theme.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>Internship Types</h3>
+  <button class="btn btn-primary" onclick="openCreate()">Add New Type</button>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body table-responsive">
+    <table class="table table-striped align-middle">
+      <thead>
+        <tr><th>Name</th><th>Description</th><th>Sections</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody id="rows"><tr><td colspan="5" class="text-center">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal fade" id="typeModal" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle">Internship Type</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="typeId">
+        <div class="row g-3 mb-3">
+          <div class="col-md-2">
+            <label class="form-label">Icon</label>
+            <input id="icon" class="form-control" value="📄">
+          </div>
+          <div class="col-md-5">
+            <label class="form-label">Name *</label>
+            <input id="name" class="form-control">
+          </div>
+          <div class="col-md-5">
+            <label class="form-label">Status</label>
+            <select id="isActive" class="form-select">
+              <option value="true">Active</option>
+              <option value="false">Inactive</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Description *</label>
+            <input id="description" class="form-control">
+          </div>
+          <div class="col-12">
+            <label class="form-label">AI Prompt Context *</label>
+            <textarea id="aiPromptContext" class="form-control" rows="4"></textarea>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="mb-0">Report Sections</h6>
+          <button class="btn btn-sm btn-outline-primary" type="button" onclick="addSectionRow()">+ Add Section</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle">
+            <thead><tr><th style="width: 20%;">Key</th><th style="width: 25%;">Title</th><th>Description</th><th style="width: 6%;"></th></tr></thead>
+            <tbody id="sectionsBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button class="btn btn-primary" onclick="saveType()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const token = localStorage.getItem('token');
+if (!token) location.href = '/login';
+const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+let modal;
+
+function keyFromTitle(title) {
+  return String(title || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 30);
+}
+
+function addSectionRow(row = { key: '', title: '', description: '' }) {
+  const tbody = document.getElementById('sectionsBody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input class="form-control sec-key" value="${row.key || ''}"></td>
+    <td><input class="form-control sec-title" value="${row.title || ''}"></td>
+    <td><input class="form-control sec-desc" value="${row.description || ''}"></td>
+    <td><button class="btn btn-sm btn-outline-danger" type="button">×</button></td>
+  `;
+  tr.querySelector('.sec-title').addEventListener('input', (e) => {
+    const keyEl = tr.querySelector('.sec-key');
+    if (!keyEl.value.trim()) keyEl.value = keyFromTitle(e.target.value);
+  });
+  tr.querySelector('button').addEventListener('click', () => tr.remove());
+  tbody.appendChild(tr);
+}
+
+function readSections() {
+  const rows = Array.from(document.querySelectorAll('#sectionsBody tr'));
+  return rows
+    .map(tr => ({
+      key: tr.querySelector('.sec-key').value.trim(),
+      title: tr.querySelector('.sec-title').value.trim(),
+      description: tr.querySelector('.sec-desc').value.trim(),
+    }))
+    .filter(s => s.title || s.key);
+}
+
+async function load() {
+  const res = await fetch('/api/internship-types/all', { headers: { 'Authorization': `Bearer ${token}` } });
+  const data = await res.json();
+  document.getElementById('rows').innerHTML = (data || []).map(t => `
+    <tr>
+      <td>${t.icon || ''} ${t.name}</td>
+      <td>${t.description || '-'}</td>
+      <td>${t.reportSections?.length || 0}</td>
+      <td>${t.isActive ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>'}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-warning" onclick='openEdit(${JSON.stringify(t)})'>Edit</button>
+        <button class="btn btn-sm btn-outline-danger" onclick='deleteType("${t._id}")'>Delete</button>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" class="text-center">No types</td></tr>';
+}
+
+function resetForm() {
+  document.getElementById('typeId').value = '';
+  document.getElementById('icon').value = '📄';
+  document.getElementById('name').value = '';
+  document.getElementById('description').value = '';
+  document.getElementById('aiPromptContext').value = '';
+  document.getElementById('isActive').value = 'true';
+  document.getElementById('sectionsBody').innerHTML = '';
+  addSectionRow({ key: 'introduction', title: 'Introduction', description: '' });
+}
+
+function openCreate() {
+  document.getElementById('modalTitle').innerText = 'Add Internship Type';
+  resetForm();
+  modal.show();
+}
+
+function openEdit(t) {
+  document.getElementById('modalTitle').innerText = 'Edit Internship Type';
+  document.getElementById('typeId').value = t._id;
+  document.getElementById('icon').value = t.icon || '📄';
+  document.getElementById('name').value = t.name || '';
+  document.getElementById('description').value = t.description || '';
+  document.getElementById('aiPromptContext').value = t.aiPromptContext || '';
+  document.getElementById('isActive').value = t.isActive ? 'true' : 'false';
+  const tbody = document.getElementById('sectionsBody');
+  tbody.innerHTML = '';
+  const sections = (t.reportSections && t.reportSections.length) ? t.reportSections : [{ key: '', title: '', description: '' }];
+  sections.forEach(addSectionRow);
+  modal.show();
+}
+
+async function saveType() {
+  const payload = {
+    icon: document.getElementById('icon').value || '📄',
+    name: document.getElementById('name').value.trim(),
+    description: document.getElementById('description').value.trim(),
+    aiPromptContext: document.getElementById('aiPromptContext').value.trim(),
+    isActive: document.getElementById('isActive').value === 'true',
+    reportSections: readSections(),
+  };
+
+  if (!payload.name || !payload.description || !payload.aiPromptContext) {
+    alert('Name, description and AI prompt context are required');
+    return;
+  }
+
+  const id = document.getElementById('typeId').value;
+  const url = id ? `/api/internship-types/${id}` : '/api/internship-types';
+  const method = id ? 'PUT' : 'POST';
+
+  const res = await fetch(url, { method, headers, body: JSON.stringify(payload) });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    alert(d.message || 'Save failed');
+    return;
+  }
+
+  modal.hide();
+  load();
+}
+
+async function deleteType(id) {
+  if (!confirm('Delete this internship type?')) return;
+  await fetch(`/api/internship-types/${id}`, { method: 'DELETE', headers });
+  load();
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  modal = new bootstrap.Modal(document.getElementById('typeModal'));
+  await load();
+});
+</script>
+{% endblock %}

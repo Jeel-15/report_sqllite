@@ -1,0 +1,82 @@
+{% extends "admin/layout.html" %}
+{% set active_page = 'degrees' %}
+
+{% block title %}Degrees - ReportGen Admin{% endblock %}
+
+{% block admin_content %}
+<section class="dashboard-grid">
+  <div>
+    <h1 class="page-title">Manage Degrees</h1>
+    <p class="page-subtitle">Maintain degree master records used by major policies and student profiles.</p>
+  </div>
+
+  <div class="stats-inline">
+    <div class="toolbar" style="display:grid;grid-template-columns:minmax(280px,420px) auto;gap:10px;">
+      <input id="degreeName" class="small-input" placeholder="New degree name">
+      <button class="btn-primary" type="button" onclick="addDegree()">Add</button>
+    </div>
+  </div>
+
+  <article class="panel-card panel-body table-card">
+    <div class="data-table-wrap">
+      <table class="data-table stagger-table">
+        <thead><tr><th>Name</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="rows"><tr><td colspan="3" style="text-align:center;color:#94a3b8;">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </article>
+</section>
+{% endblock %}
+
+{% block page_js %}
+<script>
+const token = localStorage.getItem('token');
+if (!token) location.href = '/login';
+
+async function api(url, options = {}) {
+  return fetch(url, { ...options, headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...(options.headers || {}) } });
+}
+
+async function load() {
+  const res = await api('/api/admin/degrees');
+  const data = await res.json();
+  const tbody = document.getElementById('rows');
+  tbody.innerHTML = (data || []).map(d => `
+    <tr>
+      <td>${d.name}</td>
+      <td>${d.isActive ? '<span class="status-badge status-generated">Active</span>' : '<span class="status-badge status-draft">Inactive</span>'}</td>
+      <td>
+        <div class="icon-actions">
+          <button class="toggle-action" onclick='renameDegree("${d._id}", ${JSON.stringify(d.name)})' title="Rename"><i data-lucide="pencil" style="width:16px;height:16px;"></i></button>
+          <button class="danger-action" onclick='del("${d._id}")' title="Delete"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+        </div>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="3" style="text-align:center;color:#94a3b8;">No degrees</td></tr>';
+  if (window.lucide) lucide.createIcons();
+  window.AdminUI?.staggerRows();
+}
+
+async function addDegree() {
+  const name = document.getElementById('degreeName').value.trim();
+  if (!name) return;
+  await api('/api/admin/degrees', { method: 'POST', body: JSON.stringify({ name }) });
+  document.getElementById('degreeName').value = '';
+  load();
+}
+
+async function renameDegree(id, oldName) {
+  const name = prompt('New degree name', oldName || '');
+  if (!name) return;
+  await api(`/api/admin/degrees/${id}`, { method: 'PUT', body: JSON.stringify({ name }) });
+  load();
+}
+
+async function del(id) {
+  if (!confirm('Delete degree and all majors under it?')) return;
+  await api(`/api/admin/degrees/${id}`, { method: 'DELETE' });
+  load();
+}
+
+document.addEventListener('DOMContentLoaded', load);
+</script>
+{% endblock %}
